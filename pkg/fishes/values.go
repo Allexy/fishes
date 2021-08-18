@@ -14,7 +14,7 @@ const (
 type Value interface {
 	Copy(another Value)
 	AsString() string
-	AsNumber() float32
+	AsNumber() float64
 	AsBoolean() bool
 	AsCallable() Callable
 	// Get collection accessor
@@ -22,8 +22,6 @@ type Value interface {
 	// Set collection accessor
 	Set(key Value, value Value)
 	Type() ValueType
-	// calculate values hash for comparison of values
-	Hash() int32
 }
 
 type Expression interface {
