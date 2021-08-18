@@ -4,6 +4,35 @@ import "fmt"
 
 type TokenType uint8
 
+// Possible token types
+const (
+	TokenBOF              TokenType = iota
+	TokenDefault                    // ...
+	TokenWord                       // abc
+	TokenNumber                     // 123.0
+	TokenString                     // "..."
+	TokenLogic                      // true / false
+	TokenOperator                   // +-*/...
+	TokenOpenParen                  // (
+	TokenCloseParen                 // )
+	TokenOpenBracket                // [
+	TokenCloseBracket               // ]
+	TokenOpenBrace                  // {
+	TokenCloseBrace                 // }
+	TokenColon                      // :
+	TokenSemicolon                  // ;
+	TokenComa                       // ,
+	TokenPoint                      // .
+	TokenAt                         // @
+	TokenAssignment                 // =
+	TokenArrow                      // =>
+	TokenVariable                   // $varname
+	TokenComment                    // #.... or //...
+	TokenMultilineComment           // /*...*/
+	TokenWhiteSpace                 // any white space
+	TokenEOF
+)
+
 type Token struct {
 	Token      TokenType
 	Text       string
@@ -14,55 +43,55 @@ type Token struct {
 func (t Token) String() string {
 	var name string
 	switch t.Token {
-	case TT_BOF:
+	case TokenBOF:
 		name = "BOF"
-	case TT_DEFAULT:
+	case TokenDefault:
 		name = "DEFAULT"
-	case TT_WORD:
+	case TokenWord:
 		name = "WORD"
-	case TT_STRING:
+	case TokenString:
 		name = "STRING"
-	case TT_NUMBER:
+	case TokenNumber:
 		name = "NUMBER"
-	case TT_LOGIC:
+	case TokenLogic:
 		name = "LOGIC"
-	case TT_OPERATOR:
+	case TokenOperator:
 		name = "OPERATOR"
-	case TT_O_PAREN:
+	case TokenOpenParen:
 		name = "O_PAREN"
-	case TT_C_PAREN:
+	case TokenCloseParen:
 		name = "C_PAREN"
-	case TT_O_BRACKET:
+	case TokenOpenBracket:
 		name = "O_BRACKET"
-	case TT_C_BRACKET:
+	case TokenCloseBracket:
 		name = "C_BRACKET"
-	case TT_O_BRACE:
+	case TokenOpenBrace:
 		name = "O_BRACE"
-	case TT_C_BRACE:
+	case TokenCloseBrace:
 		name = "C_BRACE"
-	case TT_COLON:
+	case TokenColon:
 		name = "COLON"
-	case TT_SEMICOLON:
+	case TokenSemicolon:
 		name = "SEMICOLON"
-	case TT_COMA:
+	case TokenComa:
 		name = "COMA"
-	case TT_AT:
+	case TokenAt:
 		name = "AT"
-	case TT_POINT:
+	case TokenPoint:
 		name = "POINT"
-	case TT_ASSIGNMENT:
+	case TokenAssignment:
 		name = "ASSIGNMENT"
-	case TT_ARROW:
+	case TokenArrow:
 		name = "ARROW"
-	case TT_VARIABLE:
+	case TokenVariable:
 		name = "VARIABLE"
-	case TT_COMMENT:
+	case TokenComment:
 		name = "COMMENT"
-	case TT_MULTILINE_COMMENT:
+	case TokenMultilineComment:
 		name = "MULTILINE_COMMET"
-	case TT_WHITE_SPACE:
+	case TokenWhiteSpace:
 		name = "WHITE_SPACE"
-	case TT_EOF:
+	case TokenEOF:
 		name = "EOF"
 	default:
 		name = "UNKNOWN"

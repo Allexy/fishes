@@ -1,7 +1,7 @@
 package tokenizer
 
 type TokenWalker interface {
-	HasNext() bool
+	Next() bool
 	Get(offset int) *Token
 	CanMove(step int) bool
 	Move(step int)
@@ -19,7 +19,7 @@ func NewTokenWalker(tokens []Token) TokenWalker {
 	return &walker{tokens: tokens, position: 0}
 }
 
-func (w walker) HasNext() bool {
+func (w walker) Next() bool {
 	return w.position < len(w.tokens)
 }
 
@@ -64,10 +64,10 @@ func (w walker) Match(tokens ...TokenType) bool {
 		current := w.tokens[curIndex].Token
 		needed := tokens[argIndex]
 		if skipping {
-			opensCounter += _getCounterIncerement(needed, current)
+			opensCounter += getCounterIncerement(needed, current)
 			if current == needed {
 				// opensCounter != -1 <= initial opening did not take into consideration
-				if _needCountOpens(needed) && opensCounter != -1 {
+				if needCountOpens(needed) && opensCounter != -1 {
 					continue
 				}
 				skipping = false
@@ -76,7 +76,7 @@ func (w walker) Match(tokens ...TokenType) bool {
 			continue
 		}
 		argIndex += 1
-		if needed == TT_DEFAULT {
+		if needed == TokenDefault {
 			skipping = true
 			curIndex -= 1 // retry current token
 			opensCounter = 0
@@ -96,37 +96,37 @@ func (w *walker) Clear() {
 	w.tokens = nil
 }
 
-func _needCountOpens(needed TokenType) bool {
+func needCountOpens(needed TokenType) bool {
 	switch needed {
-	case TT_C_BRACE, TT_C_BRACKET, TT_C_PAREN:
+	case TokenCloseBrace, TokenCloseBracket, TokenCloseParen:
 		return true
 	}
 	return false
 }
 
-func _getCounterIncerement(needed TokenType, tt TokenType) int {
+func getCounterIncerement(needed TokenType, tt TokenType) int {
 	switch needed {
-	case TT_C_PAREN:
+	case TokenCloseParen:
 		switch tt {
-		case TT_O_PAREN:
+		case TokenOpenParen:
 			return 1
-		case TT_C_PAREN:
+		case TokenCloseParen:
 			return -1
 		}
 		return 0
-	case TT_C_BRACE:
+	case TokenCloseBrace:
 		switch tt {
-		case TT_O_BRACE:
+		case TokenOpenBrace:
 			return 1
-		case TT_C_BRACE:
+		case TokenCloseBrace:
 			return -1
 		}
 		return 0
-	case TT_C_BRACKET:
+	case TokenCloseBracket:
 		switch tt {
-		case TT_O_BRACKET:
+		case TokenOpenBracket:
 			return 1
-		case TT_C_BRACKET:
+		case TokenCloseBracket:
 			return -1
 		}
 		return 0

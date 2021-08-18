@@ -17,7 +17,7 @@ func main() {
 	defer f.Close()
 	tzr := tokenizer.NewTokenizer(f, sourceName)
 	if tokens, err := tzr.Tokenize(); err == nil {
-		for tokens.HasNext() {
+		for tokens.Next() {
 			t := tokens.Get(0)
 			fmt.Println(t)
 			tokens.Move(1)

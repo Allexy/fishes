@@ -20,7 +20,7 @@ func TestTokenWalker(t *testing.T) {
 		t.Errorf("Expected size 3 but got %d", tw.Size())
 	}
 	var step uint = 0
-	for ; tw.HasNext(); step++ {
+	for ; tw.Next(); step++ {
 		tw.Move(1)
 		if step > 2 {
 			t.Errorf("Expected that walker iterate by 3 steps, current step: %d", step)
@@ -31,17 +31,17 @@ func TestTokenWalker(t *testing.T) {
 func TestTokenWalkerMatch(t *testing.T) {
 	// Simulate typical for function definition sequence of tokens
 	tokens := []Token{
-		{Token: TT_BOF},
-		{Token: TT_WORD}, {Token: TT_WORD}, {Token: TT_O_PAREN}, {Token: TT_C_PAREN},
-		{Token: TT_O_BRACE}, {Token: TT_O_BRACE}, {Token: TT_C_BRACE}, {Token: TT_WORD},
-		{Token: TT_O_BRACE}, {Token: TT_C_BRACE}, {Token: TT_WORD}, {Token: TT_C_BRACE},
-		{Token: TT_EOF},
+		{Token: TokenBOF},
+		{Token: TokenWord}, {Token: TokenWord}, {Token: TokenOpenParen}, {Token: TokenCloseParen},
+		{Token: TokenOpenBrace}, {Token: TokenOpenBrace}, {Token: TokenCloseBrace}, {Token: TokenWord},
+		{Token: TokenOpenBrace}, {Token: TokenCloseBrace}, {Token: TokenWord}, {Token: TokenCloseBrace},
+		{Token: TokenEOF},
 	}
 	tw := NewTokenWalker(tokens)
 	tw.Move(1)
 	// Any tokens between prentices and braces are matched by TT_DEFAULT, walker takes into consederation nested
 	// opening and closing prentices
-	if !tw.Match(TT_WORD, TT_WORD, TT_O_PAREN, TT_DEFAULT, TT_C_PAREN, TT_O_BRACE, TT_DEFAULT, TT_C_BRACE) {
+	if !tw.Match(TokenWord, TokenWord, TokenOpenParen, TokenDefault, TokenCloseParen, TokenOpenBrace, TokenDefault, TokenCloseBrace) {
 		t.Error("Expected that sequence is matching patter")
 	}
 }
@@ -57,7 +57,7 @@ func TestWord(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_WORD {
+	if token.Token != TokenWord {
 		t.Errorf("Expected token of type TT_WORD but got %q", token)
 	}
 	if token.Text != "word" {
@@ -74,7 +74,7 @@ func TestWordWithUnderscore(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_WORD {
+	if token.Token != TokenWord {
 		t.Errorf("Expected token of type TT_WORD but got %q", token)
 	}
 	if token.Text != "word_word_word" {
@@ -91,7 +91,7 @@ func TestWordWithNumber(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_WORD {
+	if token.Token != TokenWord {
 		t.Errorf("Expected token of type TT_WORD but got %q", token)
 	}
 	if token.Text != "word00203word" {
@@ -108,7 +108,7 @@ func TestWordWithEverything(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_WORD {
+	if token.Token != TokenWord {
 		t.Errorf("Expected token of type TT_WORD but got %q", token)
 	}
 	if token.Text != "word00203word_s" {
@@ -127,7 +127,7 @@ func TestNumberSimple(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 }
@@ -141,7 +141,7 @@ func TestNumberWithPointInMiddle(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 	if token.Text != "10.5" {
@@ -158,7 +158,7 @@ func TestNumberWithLeadingPoint(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 	if token.Text != "0.5" {
@@ -175,7 +175,7 @@ func TestNumberWithTerminatingPoint(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 	if token.Text != "5.0" {
@@ -192,7 +192,7 @@ func TestNegativeNumberSimple(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 }
@@ -206,7 +206,7 @@ func TestNegativeNumberWithPointInMiddle(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 	if token.Text != "-10.5" {
@@ -223,7 +223,7 @@ func TestNegativeNumberWithLeadingPoint(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 	if token.Text != "-0.5" {
@@ -240,7 +240,7 @@ func TestNegativeNumberWithTerminatingPoint(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_NUMBER {
+	if token.Token != TokenNumber {
 		t.Errorf("Expected token of type TT_NUMBER but got %q", token)
 	}
 	if token.Text != "-5.0" {
@@ -259,7 +259,7 @@ func TestString(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_STRING {
+	if token.Token != TokenString {
 		t.Errorf("Expected token of type TT_STRING but got %q", token)
 	}
 	if token.Text != "Test string" {
@@ -276,7 +276,7 @@ func TestStringWithEscSeq(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_STRING {
+	if token.Token != TokenString {
 		t.Errorf("Expected token of type TT_STRING but got %q", token)
 	}
 	if token.Text != "Test\nstring" {
@@ -293,7 +293,7 @@ func TestStringWithNestedQuotes(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_STRING {
+	if token.Token != TokenString {
 		t.Errorf("Expected token of type TT_STRING but got %q", token)
 	}
 	if token.Text != "Test \"string\"" {
@@ -312,7 +312,7 @@ func TestLogicalTrue(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_LOGIC {
+	if token.Token != TokenLogic {
 		t.Errorf("Expected token of type TT_LOGIC but got %q", token)
 	}
 	if token.Text != "true" {
@@ -329,7 +329,7 @@ func TestLogicalFalse(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_LOGIC {
+	if token.Token != TokenLogic {
 		t.Errorf("Expected token of type TT_LOGIC but got %q", token)
 	}
 	if token.Text != "false" {
@@ -350,7 +350,7 @@ func TestOpenParen(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_O_PAREN {
+	if token.Token != TokenOpenParen {
 		t.Errorf("Expected token of type TT_O_PAREN but got %q", token)
 	}
 	if token.Text != "(" {
@@ -367,7 +367,7 @@ func TestCloseParen(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_C_PAREN {
+	if token.Token != TokenCloseParen {
 		t.Errorf("Expected token of type TT_C_PAREN but got %q", token)
 	}
 	if token.Text != ")" {
@@ -384,7 +384,7 @@ func TestOpenBracket(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_O_BRACKET {
+	if token.Token != TokenOpenBracket {
 		t.Errorf("Expected token of type TT_O_BRACKET but got %q", token)
 	}
 	if token.Text != "[" {
@@ -401,7 +401,7 @@ func TestCloseBracket(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_C_BRACKET {
+	if token.Token != TokenCloseBracket {
 		t.Errorf("Expected token of type TT_C_BRACKET but got %q", token)
 	}
 	if token.Text != "]" {
@@ -418,7 +418,7 @@ func TestOpenBrace(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_O_BRACE {
+	if token.Token != TokenOpenBrace {
 		t.Errorf("Expected token of type TT_O_BRACE but got %q", token)
 	}
 	if token.Text != "{" {
@@ -435,7 +435,7 @@ func TestCloseBrace(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_C_BRACE {
+	if token.Token != TokenCloseBrace {
 		t.Errorf("Expected token of type TT_C_BRACE but got %q", token)
 	}
 	if token.Text != "}" {
@@ -452,7 +452,7 @@ func TestColon(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_COLON {
+	if token.Token != TokenColon {
 		t.Errorf("Expected token of type TT_COLON but got %q", token)
 	}
 	if token.Text != ":" {
@@ -469,7 +469,7 @@ func TestSemicolon(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_SEMICOLON {
+	if token.Token != TokenSemicolon {
 		t.Errorf("Expected token of type TT_SEMICOLON but got %q", token)
 	}
 	if token.Text != ";" {
@@ -486,7 +486,7 @@ func TestComa(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_COMA {
+	if token.Token != TokenComa {
 		t.Errorf("Expected token of type TT_SEMICOLON but got %q", token)
 	}
 	if token.Text != "," {
@@ -503,7 +503,7 @@ func TestPoint(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_POINT {
+	if token.Token != TokenPoint {
 		t.Errorf("Expected token of type TT_SEMICOLON but got %q", token)
 	}
 	if token.Text != "." {
@@ -520,7 +520,7 @@ func TestAt(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_AT {
+	if token.Token != TokenAt {
 		t.Errorf("Expected token of type TT_AT but got %q", token)
 	}
 	if token.Text != "@" {
@@ -537,7 +537,7 @@ func TestAssignment(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_ASSIGNMENT {
+	if token.Token != TokenAssignment {
 		t.Errorf("Expected token of type TT_ASSIGNMENT but got %q", token)
 	}
 	if token.Text != "=" {
@@ -554,7 +554,7 @@ func TestArrow(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_ARROW {
+	if token.Token != TokenArrow {
 		t.Errorf("Expected token of type TT_ARROW but got %q", token)
 	}
 	if token.Text != "=>" {
@@ -573,7 +573,7 @@ func TestVariable(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_VARIABLE {
+	if token.Token != TokenVariable {
 		t.Errorf("Expected token of type TT_VARIABLE but got %q", token)
 	}
 	if token.Text != "word" {
@@ -590,7 +590,7 @@ func TestVariableWithUnderscore(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_VARIABLE {
+	if token.Token != TokenVariable {
 		t.Errorf("Expected token of type TT_VARIABLE but got %q", token)
 	}
 	if token.Text != "word_word_word" {
@@ -607,7 +607,7 @@ func TestVariableWithNumber(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_VARIABLE {
+	if token.Token != TokenVariable {
 		t.Errorf("Expected token of type TT_VARIABLE but got %q", token)
 	}
 	if token.Text != "word00203word" {
@@ -624,7 +624,7 @@ func TestVariableWithEverything(t *testing.T) {
 		t.Errorf("Expected 3 tokens in result got %d", tw.Size())
 	}
 	token := tw.Get(1)
-	if token.Token != TT_VARIABLE {
+	if token.Token != TokenVariable {
 		t.Errorf("Expected token of type TT_VARIABLE but got %q", token)
 	}
 	if token.Text != "word00203word_s" {

@@ -20,8 +20,8 @@ type Tokenizer struct {
 	tokenBegunLine uint32
 	tokenBegunCol  uint32
 
-	tokens  []Token
-	builder []rune
+	tokens []Token
+	buffer []rune
 
 	escapedString bool
 }
@@ -31,13 +31,13 @@ func NewTokenizer(reader io.Reader, sourceName string) *Tokenizer {
 		sourceName:     sourceName,
 		reader:         reader,
 		repeatCounter:  0,
-		currentToken:   TT_DEFAULT,
+		currentToken:   TokenDefault,
 		currentLine:    0,
 		currentCol:     0,
 		tokenBegunLine: 0,
 		tokenBegunCol:  0,
 		tokens:         make([]Token, 0, 255),
-		builder:        make([]rune, 0, 1024),
+		buffer:         make([]rune, 0, 1024),
 		escapedString:  false,
 	}
 	return tr
@@ -46,20 +46,20 @@ func NewTokenizer(reader io.Reader, sourceName string) *Tokenizer {
 func (tr *Tokenizer) Tokenize() (TokenWalker, error) {
 	// does all stuff
 	bufReader := bufio.NewReader(tr.reader)
-	tr._bof()
+	tr.createBOF()
 	for {
 		r, _, err := bufReader.ReadRune()
 		if err != nil {
 			if err == io.EOF {
-				tr._eof()
+				tr.createEOF()
 				break
 			}
-			return nil, NewTokenizerError(tr.sourceName, "Failed to read source: "+err.Error(), tr.currentLine, tr.currentCol)
+			return nil, NewTokenizerError(tr.sourceName, "Failed to read source: "+err.Error(), tr.currentLine, tr.currentCol, err)
 		}
-		tr._countLinesAndCols(r)
-		tr._doRepeat()
-		for tr._needRepeat() {
-			if err := tr._process(r); err != nil {
+		tr.countLinesAndCols(r)
+		tr.doRepeat()
+		for tr.repeat() {
+			if err := tr.process(r); err != nil {
 				return nil, err
 			}
 		}
@@ -73,71 +73,71 @@ func (tr *Tokenizer) Tokenize() (TokenWalker, error) {
 
 // Appends token from current state
 //  and resets state
-func (tr *Tokenizer) _createFromCurrent() {
+func (tr *Tokenizer) createFromCurrent() {
 	// Skip comments and white spaces on this stage because these may contain more than 1 character more than 1 line
-	if tr.currentToken != TT_COMMENT && tr.currentToken != TT_WHITE_SPACE && tr.currentToken != TT_MULTILINE_COMMENT {
+	if tr.currentToken != TokenComment && tr.currentToken != TokenWhiteSpace && tr.currentToken != TokenMultilineComment {
 		token := Token{
 			Token:      tr.currentToken,
-			Text:       string(tr.builder),
+			Text:       string(tr.buffer),
 			SourceName: tr.sourceName,
 			Line:       tr.tokenBegunLine,
 			Col:        tr.tokenBegunCol,
 		}
 		tr.tokens = append(tr.tokens, token)
 	}
-	tr.builder = tr.builder[:0]
+	tr.buffer = tr.buffer[:0]
 	tr.tokenBegunLine = 0
 	tr.tokenBegunCol = 0
-	tr.currentToken = TT_DEFAULT
+	tr.currentToken = TokenDefault
 }
 
-func (tr *Tokenizer) _createFromTypeAndRune(tt TokenType, r rune) {
-	tr._begin(tt)
-	tr._put(r)
-	tr._createFromCurrent()
+func (tr *Tokenizer) createFromTypeAndRune(tt TokenType, r rune) {
+	tr.beginToken(tt)
+	tr.appendToBuffer(r)
+	tr.createFromCurrent()
 }
 
 // Appends runt to builder
-func (tr *Tokenizer) _put(r rune) {
-	tr.builder = append(tr.builder, r)
+func (tr *Tokenizer) appendToBuffer(r rune) {
+	tr.buffer = append(tr.buffer, r)
 }
 
 // Creates and appends token with type BOF
-func (tr *Tokenizer) _bof() {
-	tr._begin(TT_BOF)
-	tr._createFromCurrent()
+func (tr *Tokenizer) createBOF() {
+	tr.beginToken(TokenBOF)
+	tr.createFromCurrent()
 	tr.currentLine = 1
 }
 
 // Creates and appends token with type EOF
-func (tr *Tokenizer) _eof() {
-	if tr.currentToken != TT_DEFAULT {
-		tr._createFromCurrent()
+func (tr *Tokenizer) createEOF() {
+	if tr.currentToken != TokenDefault {
+		tr.createFromCurrent()
 	}
-	tr._begin(TT_EOF)
-	tr._createFromCurrent()
+	tr.beginToken(TokenEOF)
+	tr.createFromCurrent()
 }
 
 // Processes single rune
-func (tr *Tokenizer) _process(r rune) error {
+func (tr *Tokenizer) process(r rune) error {
 	switch tr.currentToken {
-	case TT_DEFAULT:
-		return tr._processDefState(r)
-	case TT_STRING:
+	case TokenDefault:
+		return tr.handleDefaultState(r)
+	case TokenString:
 		if tr.escapedString {
 			switch r {
 			case 't':
-				tr._put('\t')
+				tr.appendToBuffer('\t')
 			case 'b':
-				tr._put('\b')
+				tr.appendToBuffer('\b')
 			case 'r':
-				tr._put('\r')
+				tr.appendToBuffer('\r')
 			case 'n':
-				tr._put('\n')
+				tr.appendToBuffer('\n')
 			case 'f':
-				tr._put('\f')
+				tr.appendToBuffer('\f')
 			default:
-				tr._put(r)
+				tr.appendToBuffer(r)
 			}
 			tr.escapedString = false
 		} else {
@@ -145,168 +145,168 @@ func (tr *Tokenizer) _process(r rune) error {
 			case '\\':
 				tr.escapedString = true
 			case '"':
-				tr._createFromCurrent()
+				tr.createFromCurrent()
 			default:
-				tr._put(r)
+				tr.appendToBuffer(r)
 			}
 		}
-	case TT_NUMBER:
+	case TokenNumber:
 		if unicode.IsDigit(r) {
-			tr._put(r)
+			tr.appendToBuffer(r)
 		} else if r == '.' {
-			for _, c := range tr.builder {
+			for _, c := range tr.buffer {
 				if c == '.' {
-					return NewTokenizerError(tr.sourceName, "Unexpected symbol \".\"", tr.currentLine, tr.currentCol)
+					return NewTokenizerError(tr.sourceName, "Unexpected symbol \".\"", tr.currentLine, tr.currentCol, nil)
 				}
 			}
-			tr._put(r)
+			tr.appendToBuffer(r)
 		} else {
-			tr._createFromCurrent()
-			tr._doRepeat()
+			tr.createFromCurrent()
+			tr.doRepeat()
 		}
-	case TT_POINT:
+	case TokenPoint:
 		if unicode.IsDigit(r) {
-			tr.currentToken = TT_NUMBER
+			tr.currentToken = TokenNumber
 		} else {
-			tr._createFromCurrent()
+			tr.createFromCurrent()
 		}
-		tr._doRepeat()
-	case TT_OPERATOR:
-		if len(tr.builder) == 2 {
-			tr._createFromCurrent()
-			tr._doRepeat()
+		tr.doRepeat()
+	case TokenOperator:
+		if len(tr.buffer) == 2 {
+			tr.createFromCurrent()
+			tr.doRepeat()
 		} else {
 			switch r {
 			case '>', '<', '=', '!', '+', '-', '/', '*', '&', '|', '%':
-				tr._put(r)
-				tTxt := string(tr.builder)
+				tr.appendToBuffer(r)
+				tTxt := string(tr.buffer)
 				switch tTxt {
 				case "//":
-					tr.currentToken = TT_COMMENT
-					tr.builder = tr.builder[:0]
+					tr.currentToken = TokenComment
+					tr.buffer = tr.buffer[:0]
 				case "/*":
-					tr.currentToken = TT_MULTILINE_COMMENT
-					tr.builder = tr.builder[:0]
+					tr.currentToken = TokenMultilineComment
+					tr.buffer = tr.buffer[:0]
 				}
 			default:
-				tr._createFromCurrent()
-				tr._doRepeat()
+				tr.createFromCurrent()
+				tr.doRepeat()
 			}
 		}
-	case TT_WORD:
+	case TokenWord:
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
-			tr._put(r)
+			tr.appendToBuffer(r)
 		} else {
-			tr._createFromCurrent()
-			tr._doRepeat()
+			tr.createFromCurrent()
+			tr.doRepeat()
 		}
-	case TT_VARIABLE:
+	case TokenVariable:
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
-			tr._put(r)
+			tr.appendToBuffer(r)
 		} else {
-			if len(tr.builder) > 0 {
-				tr._createFromCurrent()
-				tr._doRepeat()
+			if len(tr.buffer) > 0 {
+				tr.createFromCurrent()
+				tr.doRepeat()
 			} else {
-				return NewTokenizerError(tr.sourceName, "Empty identifier", tr.currentLine, tr.currentCol)
+				return NewTokenizerError(tr.sourceName, "Empty identifier", tr.currentLine, tr.currentCol, nil)
 			}
 		}
-	case TT_COMMENT:
-		tr._put(r)
+	case TokenComment:
+		tr.appendToBuffer(r)
 		if r == '\n' {
-			tr._createFromCurrent()
+			tr.createFromCurrent()
 		}
-	case TT_MULTILINE_COMMENT:
-		if r == '/' && len(tr.builder) > 2 {
-			prevRune := tr.builder[len(tr.builder)-1]
+	case TokenMultilineComment:
+		if r == '/' && len(tr.buffer) > 2 {
+			prevRune := tr.buffer[len(tr.buffer)-1]
 			if prevRune == '*' {
-				tr._createFromCurrent()
+				tr.createFromCurrent()
 			}
 		}
-	case TT_WHITE_SPACE:
+	case TokenWhiteSpace:
 		if unicode.IsSpace(r) {
-			tr._put(r)
+			tr.appendToBuffer(r)
 		} else {
-			tr._createFromCurrent()
-			tr._doRepeat()
+			tr.createFromCurrent()
+			tr.doRepeat()
 		}
 	}
 	return nil
 }
 
 // Starts new token or creates one form single rune
-func (tr *Tokenizer) _processDefState(r rune) error {
+func (tr *Tokenizer) handleDefaultState(r rune) error {
 
 	if unicode.IsSpace(r) {
-		tr._begin(TT_WHITE_SPACE)
-		tr._doRepeat()
+		tr.beginToken(TokenWhiteSpace)
+		tr.doRepeat()
 		return nil
 	}
 
 	if unicode.IsLetter(r) || r == '_' {
-		tr._begin(TT_WORD)
-		tr._put(r)
+		tr.beginToken(TokenWord)
+		tr.appendToBuffer(r)
 		return nil
 	}
 
 	if unicode.IsDigit(r) {
-		tr._begin(TT_NUMBER)
-		tr._put(r)
+		tr.beginToken(TokenNumber)
+		tr.appendToBuffer(r)
 		return nil
 	}
 
 	switch r {
 	case '(':
-		tr._createFromTypeAndRune(TT_O_PAREN, r)
+		tr.createFromTypeAndRune(TokenOpenParen, r)
 	case ')':
-		tr._createFromTypeAndRune(TT_C_PAREN, r)
+		tr.createFromTypeAndRune(TokenCloseParen, r)
 	case '[':
-		tr._createFromTypeAndRune(TT_O_BRACKET, r)
+		tr.createFromTypeAndRune(TokenOpenBracket, r)
 	case ']':
-		tr._createFromTypeAndRune(TT_C_BRACKET, r)
+		tr.createFromTypeAndRune(TokenCloseBracket, r)
 	case '{':
-		tr._createFromTypeAndRune(TT_O_BRACE, r)
+		tr.createFromTypeAndRune(TokenOpenBrace, r)
 	case '}':
-		tr._createFromTypeAndRune(TT_C_BRACE, r)
+		tr.createFromTypeAndRune(TokenCloseBrace, r)
 	case ':':
-		tr._createFromTypeAndRune(TT_COLON, r)
+		tr.createFromTypeAndRune(TokenColon, r)
 	case ';':
-		tr._createFromTypeAndRune(TT_SEMICOLON, r)
+		tr.createFromTypeAndRune(TokenSemicolon, r)
 	case ',':
-		tr._createFromTypeAndRune(TT_COMA, r)
+		tr.createFromTypeAndRune(TokenComa, r)
 	case '@':
-		tr._createFromTypeAndRune(TT_AT, r)
+		tr.createFromTypeAndRune(TokenAt, r)
 	case '"':
-		tr._begin(TT_STRING)
+		tr.beginToken(TokenString)
 		// leading and terminating quote marks must not be in string
 	case '$':
-		tr._begin(TT_VARIABLE)
+		tr.beginToken(TokenVariable)
 		// $ is skipped
 	case '.':
 		// Can be beginning of number or just point
-		tr._begin(TT_POINT)
-		tr._put(r)
+		tr.beginToken(TokenPoint)
+		tr.appendToBuffer(r)
 	case '#':
-		tr._begin(TT_COMMENT)
+		tr.beginToken(TokenComment)
 		// '#' sign is not needed in token's text
 	case '>', '<', '=', '!', '+', '-', '/', '*', '&', '|', '%':
-		tr._begin(TT_OPERATOR)
-		tr._put(r)
+		tr.beginToken(TokenOperator)
+		tr.appendToBuffer(r)
 	default:
-		return NewTokenizerError(tr.sourceName, fmt.Sprintf("Unknown sumbol %q", r), tr.currentLine, tr.currentCol)
+		return NewTokenizerError(tr.sourceName, fmt.Sprintf("Unknown sumbol %q", r), tr.currentLine, tr.currentCol, nil)
 	}
 	return nil
 }
 
 // Initializes state
-func (tr *Tokenizer) _begin(tt TokenType) {
+func (tr *Tokenizer) beginToken(tt TokenType) {
 	tr.tokenBegunLine = tr.currentLine
 	tr.tokenBegunCol = tr.currentCol
 	tr.currentToken = tt
 }
 
 // Increments line number if current rune is \n otherwise increments col number
-func (tr *Tokenizer) _countLinesAndCols(r rune) {
+func (tr *Tokenizer) countLinesAndCols(r rune) {
 	if r == '\n' {
 		tr.currentCol = 0
 		tr.currentLine += 1
@@ -316,7 +316,7 @@ func (tr *Tokenizer) _countLinesAndCols(r rune) {
 }
 
 // Returns true if current state requires to repeat iteration of rune processing
-func (tr *Tokenizer) _needRepeat() bool {
+func (tr *Tokenizer) repeat() bool {
 	if tr.repeatCounter > 0 {
 		tr.repeatCounter -= 1
 		return true
@@ -325,6 +325,6 @@ func (tr *Tokenizer) _needRepeat() bool {
 }
 
 // Sets current state to request to repeat iteration of single rune processing
-func (tr *Tokenizer) _doRepeat() {
+func (tr *Tokenizer) doRepeat() {
 	tr.repeatCounter += 1
 }
