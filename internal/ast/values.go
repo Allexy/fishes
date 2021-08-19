@@ -93,17 +93,17 @@ func (vv VariableValue) Type() fishes.ValueType {
 
 // Constant value (consts and literals)
 
-type ConstantValue struct {
+type constantValue struct {
 	valueType      fishes.ValueType
 	stringValue    string
 	numericalValue float64
 	booleanValue   bool
 }
 
-func NewConstantValue(vt fishes.ValueType, txt string) fishes.Value {
+func newConstantValue(vt fishes.ValueType, txt string) fishes.Value {
 	switch vt {
 	case fishes.ValueString:
-		return &ConstantValue{valueType: vt, stringValue: txt}
+		return &constantValue{valueType: vt, stringValue: txt}
 	case fishes.ValueNumber:
 		val, err := strconv.ParseFloat(txt, 64)
 		if err != nil {
@@ -111,49 +111,51 @@ func NewConstantValue(vt fishes.ValueType, txt string) fishes.Value {
 			// but better to check
 			panic(err)
 		}
-		return &ConstantValue{valueType: vt, numericalValue: val}
+		return &constantValue{valueType: vt, numericalValue: val}
 	case fishes.ValueBoolean:
 		switch txt {
 		case lang.KwTrue:
-			return &ConstantValue{valueType: vt, booleanValue: true}
+			return &constantValue{valueType: vt, booleanValue: true}
 		case lang.KwFalse:
-			return &ConstantValue{valueType: vt, booleanValue: false}
+			return &constantValue{valueType: vt, booleanValue: false}
 		default:
 			panic(fmt.Errorf("invalid value for boolean constant %q", txt))
 		}
+	case fishes.ValueEmpty:
+		return &constantValue{valueType: vt}
 	default:
 		panic(fmt.Errorf("unexpected value type: %d", vt))
 	}
 }
 
-func (cv ConstantValue) Copy(another fishes.Value) {
+func (cv constantValue) Copy(another fishes.Value) {
 	panic("Can't use Copy acceptor on constant")
 }
 
-func (cv ConstantValue) AsString() string {
+func (cv constantValue) AsString() string {
 	return cv.stringValue
 }
 
-func (cv ConstantValue) AsNumber() float64 {
+func (cv constantValue) AsNumber() float64 {
 	return cv.numericalValue
 }
 
-func (cv ConstantValue) AsBoolean() bool {
+func (cv constantValue) AsBoolean() bool {
 	return cv.booleanValue
 }
 
-func (cv ConstantValue) AsCallable() fishes.Callable {
+func (cv constantValue) AsCallable() fishes.Callable {
 	return nil
 }
 
-func (cv ConstantValue) Get(k fishes.Value) fishes.Value {
+func (cv constantValue) Get(k fishes.Value) fishes.Value {
 	panic("No implementation yet")
 }
 
-func (cv ConstantValue) Set(k fishes.Value, v fishes.Value) {
+func (cv constantValue) Set(k fishes.Value, v fishes.Value) {
 	panic("No implementation yet")
 }
 
-func (cv ConstantValue) Type() fishes.ValueType {
+func (cv constantValue) Type() fishes.ValueType {
 	return cv.valueType
 }

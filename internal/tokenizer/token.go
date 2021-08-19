@@ -33,6 +33,63 @@ const (
 	TokenEOF
 )
 
+func (tt TokenType) String() string {
+	switch tt {
+	case TokenBOF:
+		return "BOF"
+	case TokenDefault:
+		return "DEFAULT"
+	case TokenWord:
+		return "WORD"
+	case TokenString:
+		return "STRING"
+	case TokenNumber:
+		return "NUMBER"
+	case TokenLogic:
+		return "LOGIC"
+	case TokenOperator:
+		return "OPERATOR"
+	case TokenOpenParen:
+		return "O_PAREN"
+	case TokenCloseParen:
+		return "C_PAREN"
+	case TokenOpenBracket:
+		return "O_BRACKET"
+	case TokenCloseBracket:
+		return "C_BRACKET"
+	case TokenOpenBrace:
+		return "O_BRACE"
+	case TokenCloseBrace:
+		return "C_BRACE"
+	case TokenColon:
+		return "COLON"
+	case TokenSemicolon:
+		return "SEMICOLON"
+	case TokenComa:
+		return "COMA"
+	case TokenAt:
+		return "AT"
+	case TokenPoint:
+		return "POINT"
+	case TokenAssignment:
+		return "ASSIGNMENT"
+	case TokenArrow:
+		return "ARROW"
+	case TokenVariable:
+		return "VARIABLE"
+	case TokenComment:
+		return "COMMENT"
+	case TokenMultilineComment:
+		return "MULTILINE_COMMET"
+	case TokenWhiteSpace:
+		return "WHITE_SPACE"
+	case TokenEOF:
+		return "EOF"
+	default:
+		panic("Unknown token type")
+	}
+}
+
 type Token struct {
 	Token      TokenType
 	Text       string
@@ -41,60 +98,5 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	var name string
-	switch t.Token {
-	case TokenBOF:
-		name = "BOF"
-	case TokenDefault:
-		name = "DEFAULT"
-	case TokenWord:
-		name = "WORD"
-	case TokenString:
-		name = "STRING"
-	case TokenNumber:
-		name = "NUMBER"
-	case TokenLogic:
-		name = "LOGIC"
-	case TokenOperator:
-		name = "OPERATOR"
-	case TokenOpenParen:
-		name = "O_PAREN"
-	case TokenCloseParen:
-		name = "C_PAREN"
-	case TokenOpenBracket:
-		name = "O_BRACKET"
-	case TokenCloseBracket:
-		name = "C_BRACKET"
-	case TokenOpenBrace:
-		name = "O_BRACE"
-	case TokenCloseBrace:
-		name = "C_BRACE"
-	case TokenColon:
-		name = "COLON"
-	case TokenSemicolon:
-		name = "SEMICOLON"
-	case TokenComa:
-		name = "COMA"
-	case TokenAt:
-		name = "AT"
-	case TokenPoint:
-		name = "POINT"
-	case TokenAssignment:
-		name = "ASSIGNMENT"
-	case TokenArrow:
-		name = "ARROW"
-	case TokenVariable:
-		name = "VARIABLE"
-	case TokenComment:
-		name = "COMMENT"
-	case TokenMultilineComment:
-		name = "MULTILINE_COMMET"
-	case TokenWhiteSpace:
-		name = "WHITE_SPACE"
-	case TokenEOF:
-		name = "EOF"
-	default:
-		name = "UNKNOWN"
-	}
-	return fmt.Sprintf("%s(%q@%d:%d)", name, t.Text, t.Line, t.Col)
+	return fmt.Sprintf("%s(%q@%d:%d)", t.Token, t.Text, t.Line, t.Col)
 }

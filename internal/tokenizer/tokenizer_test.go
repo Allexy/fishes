@@ -7,7 +7,7 @@ import (
 )
 
 // Creates and returns string reader and source name
-func _mk(s string) (io.Reader, string) {
+func reader(s string) (io.Reader, string) {
 	return strings.NewReader(s), "string"
 }
 
@@ -49,7 +49,7 @@ func TestTokenWalkerMatch(t *testing.T) {
 // Testing words
 
 func TestWord(t *testing.T) {
-	tw, err := NewTokenizer(_mk("word")).Tokenize()
+	tw, err := NewTokenizer(reader("word")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestWord(t *testing.T) {
 }
 
 func TestWordWithUnderscore(t *testing.T) {
-	tw, err := NewTokenizer(_mk("word_word_word")).Tokenize()
+	tw, err := NewTokenizer(reader("word_word_word")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestWordWithUnderscore(t *testing.T) {
 }
 
 func TestWordWithNumber(t *testing.T) {
-	tw, err := NewTokenizer(_mk("word00203word")).Tokenize()
+	tw, err := NewTokenizer(reader("word00203word")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestWordWithNumber(t *testing.T) {
 }
 
 func TestWordWithEverything(t *testing.T) {
-	tw, err := NewTokenizer(_mk("word00203word_s")).Tokenize()
+	tw, err := NewTokenizer(reader("word00203word_s")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestWordWithEverything(t *testing.T) {
 // Testing numerical literals
 
 func TestNumberSimple(t *testing.T) {
-	tw, err := NewTokenizer(_mk("10")).Tokenize()
+	tw, err := NewTokenizer(reader("10")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -133,7 +133,7 @@ func TestNumberSimple(t *testing.T) {
 }
 
 func TestNumberWithPointInMiddle(t *testing.T) {
-	tw, err := NewTokenizer(_mk("10.5")).Tokenize()
+	tw, err := NewTokenizer(reader("10.5")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestNumberWithPointInMiddle(t *testing.T) {
 }
 
 func TestNumberWithLeadingPoint(t *testing.T) {
-	tw, err := NewTokenizer(_mk(".5")).Tokenize()
+	tw, err := NewTokenizer(reader(".5")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -167,7 +167,7 @@ func TestNumberWithLeadingPoint(t *testing.T) {
 }
 
 func TestNumberWithTerminatingPoint(t *testing.T) {
-	tw, err := NewTokenizer(_mk("5.")).Tokenize()
+	tw, err := NewTokenizer(reader("5.")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -184,7 +184,7 @@ func TestNumberWithTerminatingPoint(t *testing.T) {
 }
 
 func TestNegativeNumberSimple(t *testing.T) {
-	tw, err := NewTokenizer(_mk("-10")).Tokenize()
+	tw, err := NewTokenizer(reader("-10")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestNegativeNumberSimple(t *testing.T) {
 }
 
 func TestNegativeNumberWithPointInMiddle(t *testing.T) {
-	tw, err := NewTokenizer(_mk("-10.5")).Tokenize()
+	tw, err := NewTokenizer(reader("-10.5")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -215,7 +215,7 @@ func TestNegativeNumberWithPointInMiddle(t *testing.T) {
 }
 
 func TestNegativeNumberWithLeadingPoint(t *testing.T) {
-	tw, err := NewTokenizer(_mk("-.5")).Tokenize()
+	tw, err := NewTokenizer(reader("-.5")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -232,7 +232,7 @@ func TestNegativeNumberWithLeadingPoint(t *testing.T) {
 }
 
 func TestNegativeNumberWithTerminatingPoint(t *testing.T) {
-	tw, err := NewTokenizer(_mk("-5.")).Tokenize()
+	tw, err := NewTokenizer(reader("-5.")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -251,7 +251,7 @@ func TestNegativeNumberWithTerminatingPoint(t *testing.T) {
 // Testing string literals
 
 func TestString(t *testing.T) {
-	tw, err := NewTokenizer(_mk("\"Test string\"")).Tokenize()
+	tw, err := NewTokenizer(reader("\"Test string\"")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -268,7 +268,7 @@ func TestString(t *testing.T) {
 }
 
 func TestStringWithEscSeq(t *testing.T) {
-	tw, err := NewTokenizer(_mk("\"Test\\nstring\"")).Tokenize()
+	tw, err := NewTokenizer(reader("\"Test\\nstring\"")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -285,7 +285,7 @@ func TestStringWithEscSeq(t *testing.T) {
 }
 
 func TestStringWithNestedQuotes(t *testing.T) {
-	tw, err := NewTokenizer(_mk("\"Test \\\"string\\\"\"")).Tokenize()
+	tw, err := NewTokenizer(reader("\"Test \\\"string\\\"\"")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -304,7 +304,7 @@ func TestStringWithNestedQuotes(t *testing.T) {
 // Testing logical literals
 
 func TestLogicalTrue(t *testing.T) {
-	tw, err := NewTokenizer(_mk("true")).Tokenize()
+	tw, err := NewTokenizer(reader("true")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -321,7 +321,7 @@ func TestLogicalTrue(t *testing.T) {
 }
 
 func TestLogicalFalse(t *testing.T) {
-	tw, err := NewTokenizer(_mk("false")).Tokenize()
+	tw, err := NewTokenizer(reader("false")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -342,7 +342,7 @@ func TestLogicalFalse(t *testing.T) {
 // Testing syntax punctuation
 
 func TestOpenParen(t *testing.T) {
-	tw, err := NewTokenizer(_mk("(")).Tokenize()
+	tw, err := NewTokenizer(reader("(")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -359,7 +359,7 @@ func TestOpenParen(t *testing.T) {
 }
 
 func TestCloseParen(t *testing.T) {
-	tw, err := NewTokenizer(_mk(")")).Tokenize()
+	tw, err := NewTokenizer(reader(")")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -376,7 +376,7 @@ func TestCloseParen(t *testing.T) {
 }
 
 func TestOpenBracket(t *testing.T) {
-	tw, err := NewTokenizer(_mk("[")).Tokenize()
+	tw, err := NewTokenizer(reader("[")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -393,7 +393,7 @@ func TestOpenBracket(t *testing.T) {
 }
 
 func TestCloseBracket(t *testing.T) {
-	tw, err := NewTokenizer(_mk("]")).Tokenize()
+	tw, err := NewTokenizer(reader("]")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -410,7 +410,7 @@ func TestCloseBracket(t *testing.T) {
 }
 
 func TestOpenBrace(t *testing.T) {
-	tw, err := NewTokenizer(_mk("{")).Tokenize()
+	tw, err := NewTokenizer(reader("{")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -427,7 +427,7 @@ func TestOpenBrace(t *testing.T) {
 }
 
 func TestCloseBrace(t *testing.T) {
-	tw, err := NewTokenizer(_mk("}")).Tokenize()
+	tw, err := NewTokenizer(reader("}")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -444,7 +444,7 @@ func TestCloseBrace(t *testing.T) {
 }
 
 func TestColon(t *testing.T) {
-	tw, err := NewTokenizer(_mk(":")).Tokenize()
+	tw, err := NewTokenizer(reader(":")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -461,7 +461,7 @@ func TestColon(t *testing.T) {
 }
 
 func TestSemicolon(t *testing.T) {
-	tw, err := NewTokenizer(_mk(";")).Tokenize()
+	tw, err := NewTokenizer(reader(";")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -478,7 +478,7 @@ func TestSemicolon(t *testing.T) {
 }
 
 func TestComa(t *testing.T) {
-	tw, err := NewTokenizer(_mk(",")).Tokenize()
+	tw, err := NewTokenizer(reader(",")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -495,7 +495,7 @@ func TestComa(t *testing.T) {
 }
 
 func TestPoint(t *testing.T) {
-	tw, err := NewTokenizer(_mk(".")).Tokenize()
+	tw, err := NewTokenizer(reader(".")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -512,7 +512,7 @@ func TestPoint(t *testing.T) {
 }
 
 func TestAt(t *testing.T) {
-	tw, err := NewTokenizer(_mk("@")).Tokenize()
+	tw, err := NewTokenizer(reader("@")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -529,7 +529,7 @@ func TestAt(t *testing.T) {
 }
 
 func TestAssignment(t *testing.T) {
-	tw, err := NewTokenizer(_mk("=")).Tokenize()
+	tw, err := NewTokenizer(reader("=")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -546,7 +546,7 @@ func TestAssignment(t *testing.T) {
 }
 
 func TestArrow(t *testing.T) {
-	tw, err := NewTokenizer(_mk("=>")).Tokenize()
+	tw, err := NewTokenizer(reader("=>")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -565,7 +565,7 @@ func TestArrow(t *testing.T) {
 // Testing variable
 
 func TestVariable(t *testing.T) {
-	tw, err := NewTokenizer(_mk("$word")).Tokenize()
+	tw, err := NewTokenizer(reader("$word")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -582,7 +582,7 @@ func TestVariable(t *testing.T) {
 }
 
 func TestVariableWithUnderscore(t *testing.T) {
-	tw, err := NewTokenizer(_mk("$word_word_word")).Tokenize()
+	tw, err := NewTokenizer(reader("$word_word_word")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -599,7 +599,7 @@ func TestVariableWithUnderscore(t *testing.T) {
 }
 
 func TestVariableWithNumber(t *testing.T) {
-	tw, err := NewTokenizer(_mk("$word00203word")).Tokenize()
+	tw, err := NewTokenizer(reader("$word00203word")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
@@ -616,7 +616,7 @@ func TestVariableWithNumber(t *testing.T) {
 }
 
 func TestVariableWithEverything(t *testing.T) {
-	tw, err := NewTokenizer(_mk("$word00203word_s")).Tokenize()
+	tw, err := NewTokenizer(reader("$word00203word_s")).Tokenize()
 	if err != nil {
 		t.Errorf("Tokenization failed with err: %v", err)
 	}
