@@ -58,7 +58,7 @@ func (s *Scope) Parse(walker tokenizer.TokenWalker) error {
 		}
 		// final test
 		if t := walker.Get(0); t.Token != tokenizer.TokenEOF {
-			return newParserError(t.SourceName, fmt.Sprintf("Unrecognized expression starting from %q", t.Token), t.Line, t.Col, nil)
+			return newParserError(t.SourceName, fmt.Sprintf("unrecognized expression starting from %q", t.Token), t.Line, t.Col, nil)
 		}
 	}
 	return nil

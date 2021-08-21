@@ -22,15 +22,15 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 		next := tw.Get(1)
 		switch token.Token {
 		case TokenDefault:
-			return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("Invalid token %v", token), token.Line, token.Col, nil)
+			return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid token %v", token), token.Line, token.Col, nil)
 		case TokenNumber:
 			filterNumbersText(token)
 			if isInvalidNumber(token) {
-				return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("Invalid numerical literal %q", token.Text), token.Line, token.Col, nil)
+				return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, nil)
 			}
 		case TokenOperator:
 			if isInvalidOperator(token, previous, next) {
-				return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("Invalid operator %q", token.Text), token.Line, token.Col, nil)
+				return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid operator %q", token.Text), token.Line, token.Col, nil)
 			}
 			switch token.Text {
 			case lang.OpArrow:
@@ -56,7 +56,7 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 							Col:        token.Col,
 						}
 						if isInvalidNumber(&replacement) {
-							return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("Invalid numerical literal %q", token.Text), token.Line, token.Col, nil)
+							return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, nil)
 						}
 						optimized = append(optimized, replacement)
 						tw.Move(2) // Step over operator and up comming number

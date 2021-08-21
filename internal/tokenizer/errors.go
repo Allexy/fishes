@@ -15,7 +15,7 @@ func NewTokenizerError(sourceName string, message string, line uint32, col uint3
 }
 
 func (te TokenizerError) Error() string {
-	return fmt.Sprintf("Error in file %s: %s\nAt line %d; col: %d", te.sourceName, te.message, te.line, te.col)
+	return fmt.Sprintf("error in %s: %s; line %d; col: %d", te.sourceName, te.message, te.line, te.col)
 }
 
 func (te TokenizerError) Cause() error {

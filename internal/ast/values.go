@@ -53,7 +53,7 @@ func (vv *VariableValue) Copy(another fishes.Value) {
 		vv.callableValue = another.AsCallable()
 		vv.booleanValue = vv.callableValue != nil
 	case fishes.ValueCollection:
-		panic("No implementation yet")
+		panic("no implementation yet")
 	case fishes.ValueEmpty:
 		vv.variableType = fishes.ValueEmpty
 		vv.stringValue = ""
@@ -80,11 +80,11 @@ func (vv VariableValue) AsCallable() fishes.Callable {
 }
 
 func (vv VariableValue) Get(k fishes.Value) fishes.Value {
-	panic("No implementation yet")
+	panic("no implementation yet")
 }
 
 func (vv VariableValue) Set(k fishes.Value, v fishes.Value) {
-	panic("No implementation yet")
+	panic("no implementation yet")
 }
 
 func (vv VariableValue) Type() fishes.ValueType {
@@ -129,7 +129,7 @@ func newConstantValue(vt fishes.ValueType, txt string) fishes.Value {
 }
 
 func (cv constantValue) Copy(another fishes.Value) {
-	panic("Can't use Copy acceptor on constant")
+	panic("can't use Copy acceptor on constant")
 }
 
 func (cv constantValue) AsString() string {
@@ -149,11 +149,11 @@ func (cv constantValue) AsCallable() fishes.Callable {
 }
 
 func (cv constantValue) Get(k fishes.Value) fishes.Value {
-	panic("No implementation yet")
+	panic("no implementation yet")
 }
 
 func (cv constantValue) Set(k fishes.Value, v fishes.Value) {
-	panic("No implementation yet")
+	panic("no implementation yet")
 }
 
 func (cv constantValue) Type() fishes.ValueType {

@@ -86,7 +86,7 @@ func (tt TokenType) String() string {
 	case TokenEOF:
 		return "EOF"
 	default:
-		panic("Unknown token type")
+		panic("unknown token type")
 	}
 }
 

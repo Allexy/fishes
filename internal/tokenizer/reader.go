@@ -54,7 +54,7 @@ func (tr *Tokenizer) Tokenize() (TokenWalker, error) {
 				tr.createEOF()
 				break
 			}
-			return nil, NewTokenizerError(tr.sourceName, "Failed to read source: "+err.Error(), tr.currentLine, tr.currentCol, err)
+			return nil, NewTokenizerError(tr.sourceName, "failed to read source: "+err.Error(), tr.currentLine, tr.currentCol, err)
 		}
 		tr.countLinesAndCols(r)
 		tr.doRepeat()
@@ -156,7 +156,7 @@ func (tr *Tokenizer) process(r rune) error {
 		} else if r == '.' {
 			for _, c := range tr.buffer {
 				if c == '.' {
-					return NewTokenizerError(tr.sourceName, "Unexpected symbol \".\"", tr.currentLine, tr.currentCol, nil)
+					return NewTokenizerError(tr.sourceName, "unexpected symbol \".\"", tr.currentLine, tr.currentCol, nil)
 				}
 			}
 			tr.appendToBuffer(r)
@@ -208,7 +208,7 @@ func (tr *Tokenizer) process(r rune) error {
 				tr.createFromCurrent()
 				tr.doRepeat()
 			} else {
-				return NewTokenizerError(tr.sourceName, "Empty identifier", tr.currentLine, tr.currentCol, nil)
+				return NewTokenizerError(tr.sourceName, "empty identifier", tr.currentLine, tr.currentCol, nil)
 			}
 		}
 	case TokenComment:
@@ -293,7 +293,7 @@ func (tr *Tokenizer) handleDefaultState(r rune) error {
 		tr.beginToken(TokenOperator)
 		tr.appendToBuffer(r)
 	default:
-		return NewTokenizerError(tr.sourceName, fmt.Sprintf("Unknown sumbol %q", r), tr.currentLine, tr.currentCol, nil)
+		return NewTokenizerError(tr.sourceName, fmt.Sprintf("unknown sumbol %q", r), tr.currentLine, tr.currentCol, nil)
 	}
 	return nil
 }

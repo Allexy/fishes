@@ -15,7 +15,7 @@ func newParserError(sourceName string, message string, line uint32, col uint32, 
 }
 
 func (pe parserError) Error() string {
-	return fmt.Sprintf("Parse error in file %s: %s\nAt line %d; col: %d", pe.sourceName, pe.message, pe.line, pe.col)
+	return fmt.Sprintf("parse error in %s: %s; line %d; col: %d", pe.sourceName, pe.message, pe.line, pe.col)
 }
 
 func (pe parserError) Cause() error {
