@@ -20,7 +20,7 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 		token := tw.Get(0)
 		previous := tw.Get(-1)
 		next := tw.Get(1)
-		switch token.Token {
+		switch token.Type {
 		case TokenDefault:
 			return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid token %v", token), token.Line, token.Col, nil)
 		case TokenNumber:
@@ -34,9 +34,9 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 			}
 			switch token.Text {
 			case lang.OpArrow:
-				token.Token = TokenArrow
+				token.Type = TokenArrow
 			case lang.OpAssign:
-				token.Token = TokenAssignment
+				token.Type = TokenAssignment
 			case lang.OpPlus, lang.OpMinus:
 				// need to check if next token is numerical literal, it may be negative number
 				if tw.Match(TokenOperator, TokenNumber) {
@@ -49,7 +49,7 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 							newText = token.Text + next.Text
 						}
 						replacement := Token{
-							Token:      TokenNumber,
+							Type:       TokenNumber,
 							Text:       newText,
 							SourceName: token.SourceName,
 							Line:       token.Line,
@@ -68,7 +68,7 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 		case TokenWord:
 			switch token.Text {
 			case lang.KwTrue, lang.KwFalse:
-				token.Token = TokenLogic
+				token.Type = TokenLogic
 			}
 		}
 		optimized = append(optimized, *token)
@@ -81,6 +81,9 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 }
 
 func filterNumbersText(t *Token) {
+	for t.Text[0] == '0' && len(t.Text) > 1 {
+		t.Text = t.Text[1:len(t.Text)]
+	}
 	if t.Text[0] == '.' {
 		t.Text = "0" + t.Text
 	} else if t.Text[len(t.Text)-1] == '.' {
@@ -92,7 +95,7 @@ func isNegativeNumberDetected(previous *Token) bool {
 	if previous == nil {
 		return true
 	}
-	switch previous.Token {
+	switch previous.Type {
 	// means that current token is part of arithmetic expression
 	case TokenNumber, TokenVariable, TokenCloseParen:
 		return false
@@ -111,12 +114,12 @@ func isInvalidOperator(c *Token, p *Token, n *Token) bool {
 	switch c.Text {
 	case lang.OpPlusAssign, lang.OpMinusAssign, lang.OpDivideAssign, lang.OpMultiplyAssign, lang.OpModuloAssign:
 		// These kinds of operators must follow by variable
-		if p == nil || p.Token != TokenVariable {
+		if p == nil || p.Type != TokenVariable {
 			return false
 		}
 	case lang.OpIncrement, lang.OpDecrement:
 		// This kinds stands before or after variable
-		if (p == nil || p.Token != TokenVariable) && (n == nil || n.Token != TokenVariable) {
+		if (p == nil || p.Type != TokenVariable) && (n == nil || n.Type != TokenVariable) {
 			return false
 		}
 	}

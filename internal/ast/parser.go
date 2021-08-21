@@ -57,8 +57,8 @@ func (s *Scope) Parse(walker tokenizer.TokenWalker) error {
 			continue
 		}
 		// final test
-		if t := walker.Get(0); t.Token != tokenizer.TokenEOF {
-			return newParserError(t.SourceName, fmt.Sprintf("unrecognized expression starting from %q", t.Token), t.Line, t.Col, nil)
+		if t := walker.Get(0); t.Type != tokenizer.TokenEOF {
+			return newParserError(t.SourceName, fmt.Sprintf("unrecognized expression starting from %q", t.Type), t.Line, t.Col, nil)
 		}
 	}
 	return nil
@@ -68,7 +68,7 @@ func (s *Scope) parseNamedConstant(tWord *tokenizer.Token, tVal *tokenizer.Token
 	if _, exists := s.constants[tWord.Text]; exists {
 		return newParserError(tWord.SourceName, fmt.Sprintf("Constant %q already defined", tWord.Text), tWord.Line, tVal.Col, nil)
 	}
-	switch tVal.Token {
+	switch tVal.Type {
 	case tokenizer.TokenNumber:
 		s.constants[tWord.Text] = newConstantValue(fishes.ValueNumber, tVal.Text)
 	case tokenizer.TokenString:
@@ -83,7 +83,7 @@ func (s *Scope) parseNamedConstant(tWord *tokenizer.Token, tVal *tokenizer.Token
 			panic(newParserError(tVal.SourceName, fmt.Sprintf("Unexpected token text %q", tVal.Text), tVal.Line, tVal.Col, nil))
 		}
 	default:
-		panic(newParserError(tVal.SourceName, fmt.Sprintf("Unexpected token type %q", tVal.Token), tVal.Line, tVal.Col, nil))
+		panic(newParserError(tVal.SourceName, fmt.Sprintf("Unexpected token type %q", tVal.Type), tVal.Line, tVal.Col, nil))
 	}
 	return nil
 }

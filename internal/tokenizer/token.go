@@ -91,12 +91,12 @@ func (tt TokenType) String() string {
 }
 
 type Token struct {
-	Token      TokenType
+	Type       TokenType
 	Text       string
 	SourceName string
 	Line, Col  uint32
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%s(%q@%d:%d)", t.Token, t.Text, t.Line, t.Col)
+	return fmt.Sprintf("%s(%q@%d:%d)", t.Type, t.Text, t.Line, t.Col)
 }

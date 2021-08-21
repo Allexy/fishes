@@ -1,12 +1,13 @@
 package tokenizer
 
 import (
+	"github.com/stretchr/testify/require"
 	"io"
 	"strings"
 	"testing"
 )
 
-// Creates and returns string reader and source name
+// reader creates and returns strings.Reader and source name
 func reader(s string) (io.Reader, string) {
 	return strings.NewReader(s), "string"
 }
@@ -14,620 +15,430 @@ func reader(s string) (io.Reader, string) {
 // Testing walker
 
 func TestTokenWalker(t *testing.T) {
-	tokens := []Token{{}, {}, {}}
-	tw := NewTokenWalker(tokens)
-	if tw.Size() != 3 {
-		t.Errorf("expected size 3 but got %d", tw.Size())
-	}
-	var step uint = 0
+	tw := NewTokenWalker([]Token{{}, {}, {}})
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	var step = 0
 	for ; tw.Next(); step++ {
 		tw.Move(1)
-		if step > 2 {
-			t.Errorf("expected that walker iterate by 3 steps, current step: %d", step)
-		}
+		require.Lessf(t, step, 3, "expected that walker iterate by 2 steps, current step: %d", step)
 	}
 }
 
 func TestTokenWalkerMatch(t *testing.T) {
-	// Simulate typical for function definition sequence of tokens
+	// Simulate typical function definition sequence of tokens
 	tokens := []Token{
-		{Token: TokenBOF},
-		{Token: TokenWord}, {Token: TokenWord}, {Token: TokenOpenParen}, {Token: TokenCloseParen},
-		{Token: TokenOpenBrace}, {Token: TokenOpenBrace}, {Token: TokenCloseBrace}, {Token: TokenWord},
-		{Token: TokenOpenBrace}, {Token: TokenCloseBrace}, {Token: TokenWord}, {Token: TokenCloseBrace},
-		{Token: TokenEOF},
+		{Type: TokenBOF},
+		{Type: TokenWord}, {Type: TokenWord}, {Type: TokenOpenParen}, {Type: TokenCloseParen},
+		{Type: TokenOpenBrace}, {Type: TokenOpenBrace}, {Type: TokenCloseBrace}, {Type: TokenWord},
+		{Type: TokenOpenBrace}, {Type: TokenCloseBrace}, {Type: TokenWord}, {Type: TokenCloseBrace},
+		{Type: TokenEOF},
 	}
+	// Any tokens between parentheses and curly braces are matched by TT_DEFAULT, walker takes into consideration nested
+	// opening and closing parentheses
 	tw := NewTokenWalker(tokens)
+	require.False(
+		t,
+		tw.Match(TokenWord, TokenWord, TokenOpenParen, TokenDefault, TokenCloseParen, TokenOpenBrace, TokenDefault, TokenCloseBrace),
+		"When steps counter of TokenWalker points to TT_BOF it must not match the pattern",
+	)
 	tw.Move(1)
-	// Any tokens between prentices and braces are matched by TT_DEFAULT, walker takes into consederation nested
-	// opening and closing prentices
-	if !tw.Match(TokenWord, TokenWord, TokenOpenParen, TokenDefault, TokenCloseParen, TokenOpenBrace, TokenDefault, TokenCloseBrace) {
-		t.Error("expected that sequence is matching patter")
-	}
+	require.True(
+		t,
+		tw.Match(TokenWord, TokenWord, TokenOpenParen, TokenDefault, TokenCloseParen, TokenOpenBrace, TokenDefault, TokenCloseBrace),
+		"When steps counter of TokenWalker points to TT_WORD it must match the pattern",
+	)
 }
 
 // Testing words
 
+func TestBOF(t *testing.T) {
+	tw, err := NewTokenizer(reader("some_thing")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(0)
+	require.Equalf(t, TokenBOF, token.Type, "expected token type %v got %v", TokenBOF, token.Type)
+}
+
 func TestWord(t *testing.T) {
 	tw, err := NewTokenizer(reader("word")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenWord {
-		t.Errorf("expected token of type TT_WORD but got %q", token)
-	}
-	if token.Text != "word" {
-		t.Errorf("expected token text is 'word' but got %q", token)
-	}
+	require.Equalf(t, TokenWord, token.Type, "expected token type %v got %v", TokenWord, token.Type)
+	require.Equalf(t, "word", token.Text, "expected token text is %q got %q", "word", token.Text)
 }
 
 func TestWordWithUnderscore(t *testing.T) {
 	tw, err := NewTokenizer(reader("word_word_word")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenWord {
-		t.Errorf("expected token of type TT_WORD but got %q", token)
-	}
-	if token.Text != "word_word_word" {
-		t.Errorf("expected token text is 'word_word_word' but got %q", token)
-	}
+	require.Equalf(t, TokenWord, token.Type, "expected token type %v got %v", TokenWord, token.Type)
+	require.Equalf(t, "word_word_word", token.Text, "expected token text is %q got %q", "word_word_word", token.Text)
 }
 
 func TestWordWithNumber(t *testing.T) {
 	tw, err := NewTokenizer(reader("word00203word")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenWord {
-		t.Errorf("expected token of type TT_WORD but got %q", token)
-	}
-	if token.Text != "word00203word" {
-		t.Errorf("expected token text is 'word00203word' but got %q", token)
-	}
+	require.Equalf(t, TokenWord, token.Type, "expected token type %v got %v", TokenWord, token.Type)
+	require.Equalf(t, "word00203word", token.Text, "expected token text is %q got %q", "word00203word", token.Text)
+}
+
+func TestWordStartingFromNumber(t *testing.T) {
+	tw, err := NewTokenizer(reader("203word")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 4, tw.Size(), "Walker must contain 4 items got %d", tw.Size())
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "203", token.Text, "expected token text is %q got %q", "203", token.Text)
+	token = tw.Get(2)
+	require.Equalf(t, TokenWord, token.Type, "expected token type %v got %v", TokenWord, token.Type)
+	require.Equalf(t, "word", token.Text, "expected token text is %q got %q", "word", token.Text)
 }
 
 func TestWordWithEverything(t *testing.T) {
 	tw, err := NewTokenizer(reader("word00203word_s")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenWord {
-		t.Errorf("expected token of type TT_WORD but got %q", token)
-	}
-	if token.Text != "word00203word_s" {
-		t.Errorf("expected token text is 'word00203word_s' but got %q", token)
-	}
+	require.Equalf(t, TokenWord, token.Type, "expected token type %v got %v", TokenWord, token.Type)
+	require.Equalf(t, "word00203word_s", token.Text, "expected token text is %q got %q", "word00203word_s", token.Text)
 }
 
 // Testing numerical literals
 
 func TestNumberSimple(t *testing.T) {
 	tw, err := NewTokenizer(reader("10")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "10", token.Text, "expected token text is %q got %q", "10", token.Text)
 }
 
 func TestNumberWithPointInMiddle(t *testing.T) {
 	tw, err := NewTokenizer(reader("10.5")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
-	if token.Text != "10.5" {
-		t.Errorf("expected token text is '10.0' but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "10.5", token.Text, "expected token text is %q got %q", "10.5", token.Text)
 }
 
 func TestNumberWithLeadingPoint(t *testing.T) {
 	tw, err := NewTokenizer(reader(".5")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
-	if token.Text != "0.5" {
-		t.Errorf("expected token text is '0.5' but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "0.5", token.Text, "expected token text is %q got %q", "0.5", token.Text)
 }
 
 func TestNumberWithTerminatingPoint(t *testing.T) {
 	tw, err := NewTokenizer(reader("5.")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
-	if token.Text != "5.0" {
-		t.Errorf("expected token text is '5.0' but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "5.0", token.Text, "expected token text is %q got %q", "5.0", token.Text)
 }
 
 func TestNegativeNumberSimple(t *testing.T) {
 	tw, err := NewTokenizer(reader("-10")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "-10", token.Text, "expected token text is %q got %q", "-10", token.Text)
 }
 
 func TestNegativeNumberWithPointInMiddle(t *testing.T) {
 	tw, err := NewTokenizer(reader("-10.5")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
-	if token.Text != "-10.5" {
-		t.Errorf("expected token text is '-10.5' but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "-10.5", token.Text, "expected token text is %q got %q", "-10.5", token.Text)
 }
 
 func TestNegativeNumberWithLeadingPoint(t *testing.T) {
 	tw, err := NewTokenizer(reader("-.5")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
-	if token.Text != "-0.5" {
-		t.Errorf("expected token text is '-0.5' but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "-0.5", token.Text, "expected token text is %q got %q", "-0.5", token.Text)
 }
 
 func TestNegativeNumberWithTerminatingPoint(t *testing.T) {
 	tw, err := NewTokenizer(reader("-5.")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenNumber {
-		t.Errorf("expected token of type TT_NUMBER but got %q", token)
-	}
-	if token.Text != "-5.0" {
-		t.Errorf("expected token text is '-5.0' but got %q", token)
-	}
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "-5.0", token.Text, "expected token text is %q got %q", "-5.0", token.Text)
+}
+
+func TestNumberStartedFromZero(t *testing.T) {
+	tw, err := NewTokenizer(reader("002")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(1)
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "2", token.Text, "expected token text is %q got %q", "2", token.Text)
+}
+
+func TestNumberContainsOnlyZeros(t *testing.T) {
+	tw, err := NewTokenizer(reader("00000")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(1)
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "0", token.Text, "expected token text is %q got %q", "0", token.Text)
+}
+
+func TestNumberStartsWithZerosAndPoint(t *testing.T) {
+	tw, err := NewTokenizer(reader("00000.01")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(1)
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "0.01", token.Text, "expected token text is %q got %q", "0.01", token.Text)
+}
+
+func TestNegativeZero(t *testing.T) {
+	tw, err := NewTokenizer(reader("-00000")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(1)
+	require.Equalf(t, TokenNumber, token.Type, "expected token type %v got %v", TokenNumber, token.Type)
+	require.Equalf(t, "-0", token.Text, "expected token text is %q got %q", "-0", token.Text)
 }
 
 // Testing string literals
 
 func TestString(t *testing.T) {
 	tw, err := NewTokenizer(reader("\"Test string\"")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenString {
-		t.Errorf("expected token of type TT_STRING but got %q", token)
-	}
-	if token.Text != "Test string" {
-		t.Errorf("expected token text is 'Test string' but got %q", token)
-	}
+	require.Equalf(t, TokenString, token.Type, "expected token type %v got %v", TokenString, token.Type)
+	require.Equalf(t, "Test string", token.Text, "expected token text is %q got %q", "Test string", token.Text)
 }
 
 func TestStringWithEscSeq(t *testing.T) {
 	tw, err := NewTokenizer(reader("\"Test\\nstring\"")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenString {
-		t.Errorf("expected token of type TT_STRING but got %q", token)
-	}
-	if token.Text != "Test\nstring" {
-		t.Errorf("expected token text is 'Test\\nstring' but got %q", token)
-	}
+	require.Equalf(t, TokenString, token.Type, "expected token type %v got %v", TokenString, token.Type)
+	require.Equalf(t, "Test\nstring", token.Text, "expected token text is %q got %q", "Test\nstring", token.Text)
 }
 
 func TestStringWithNestedQuotes(t *testing.T) {
 	tw, err := NewTokenizer(reader("\"Test \\\"string\\\"\"")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenString {
-		t.Errorf("expected token of type TT_STRING but got %q", token)
-	}
-	if token.Text != "Test \"string\"" {
-		t.Errorf("expected token text is 'Test \\\"string\\\"' but got %q", token)
-	}
+	require.Equalf(t, TokenString, token.Type, "expected token type %v got %v", TokenString, token.Type)
+	require.Equalf(t, "Test \"string\"", token.Text, "expected token text is %q got %q", "Test \"string\"", token.Text)
 }
 
 // Testing logical literals
 
 func TestLogicalTrue(t *testing.T) {
 	tw, err := NewTokenizer(reader("true")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenLogic {
-		t.Errorf("expected token of type TT_LOGIC but got %q", token)
-	}
-	if token.Text != "true" {
-		t.Errorf("expected token text is 'true' but got %q", token)
-	}
+	require.Equalf(t, TokenLogic, token.Type, "expected token type %v got %v", TokenLogic, token.Type)
+	require.Equalf(t, "true", token.Text, "expected token text is %q got %q", "true", token.Text)
 }
 
 func TestLogicalFalse(t *testing.T) {
 	tw, err := NewTokenizer(reader("false")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenLogic {
-		t.Errorf("expected token of type TT_LOGIC but got %q", token)
-	}
-	if token.Text != "false" {
-		t.Errorf("expected token text is 'false' but got %q", token)
-	}
+	require.Equalf(t, TokenLogic, token.Type, "expected token type %v got %v", TokenLogic, token.Type)
+	require.Equalf(t, "false", token.Text, "expected token text is %q got %q", "false", token.Text)
 }
 
-// Testing operators (I'll do this latter)
+// TODO: Testing operators
 
 // Testing syntax punctuation
 
 func TestOpenParen(t *testing.T) {
 	tw, err := NewTokenizer(reader("(")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenOpenParen {
-		t.Errorf("expected token of type TT_O_PAREN but got %q", token)
-	}
-	if token.Text != "(" {
-		t.Errorf("expected token text is '(' but got %q", token)
-	}
+	require.Equalf(t, TokenOpenParen, token.Type, "expected token type %v got %v", TokenOpenParen, token.Type)
+	require.Equalf(t, "(", token.Text, "expected token text is %q got %q", "(", token.Text)
 }
 
 func TestCloseParen(t *testing.T) {
 	tw, err := NewTokenizer(reader(")")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenCloseParen {
-		t.Errorf("expected token of type TT_C_PAREN but got %q", token)
-	}
-	if token.Text != ")" {
-		t.Errorf("expected token text is ')' but got %q", token)
-	}
+	require.Equalf(t, TokenCloseParen, token.Type, "expected token type %v got %v", TokenCloseParen, token.Type)
+	require.Equalf(t, ")", token.Text, "expected token text is %q got %q", ")", token.Text)
 }
 
 func TestOpenBracket(t *testing.T) {
 	tw, err := NewTokenizer(reader("[")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenOpenBracket {
-		t.Errorf("expected token of type TT_O_BRACKET but got %q", token)
-	}
-	if token.Text != "[" {
-		t.Errorf("expected token text is '[' but got %q", token)
-	}
+	require.Equalf(t, TokenOpenBracket, token.Type, "expected token type %v got %v", TokenOpenBracket, token.Type)
+	require.Equalf(t, "[", token.Text, "expected token text is %q got %q", "[", token.Text)
 }
 
 func TestCloseBracket(t *testing.T) {
 	tw, err := NewTokenizer(reader("]")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenCloseBracket {
-		t.Errorf("expected token of type TT_C_BRACKET but got %q", token)
-	}
-	if token.Text != "]" {
-		t.Errorf("expected token text is ']' but got %q", token)
-	}
+	require.Equalf(t, TokenCloseBracket, token.Type, "expected token type %v got %v", TokenCloseBracket, token.Type)
+	require.Equalf(t, "]", token.Text, "expected token text is %q got %q", "]", token.Text)
 }
 
 func TestOpenBrace(t *testing.T) {
 	tw, err := NewTokenizer(reader("{")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenOpenBrace {
-		t.Errorf("expected token of type TT_O_BRACE but got %q", token)
-	}
-	if token.Text != "{" {
-		t.Errorf("expected token text is '{' but got %q", token)
-	}
+	require.Equalf(t, TokenOpenBrace, token.Type, "expected token type %v got %v", TokenOpenBrace, token.Type)
+	require.Equalf(t, "{", token.Text, "expected token text is %q got %q", "{", token.Text)
 }
 
 func TestCloseBrace(t *testing.T) {
 	tw, err := NewTokenizer(reader("}")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenCloseBrace {
-		t.Errorf("expected token of type TT_C_BRACE but got %q", token)
-	}
-	if token.Text != "}" {
-		t.Errorf("expected token text is '}' but got %q", token)
-	}
+	require.Equalf(t, TokenCloseBrace, token.Type, "expected token type %v got %v", TokenCloseBrace, token.Type)
+	require.Equalf(t, "}", token.Text, "expected token text is %q got %q", "}", token.Text)
 }
 
 func TestColon(t *testing.T) {
 	tw, err := NewTokenizer(reader(":")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenColon {
-		t.Errorf("expected token of type TT_COLON but got %q", token)
-	}
-	if token.Text != ":" {
-		t.Errorf("expected token text is ':' but got %q", token)
-	}
+	require.Equalf(t, TokenColon, token.Type, "expected token type %v got %v", TokenColon, token.Type)
+	require.Equalf(t, ":", token.Text, "expected token text is %q got %q", ":", token.Text)
 }
 
 func TestSemicolon(t *testing.T) {
 	tw, err := NewTokenizer(reader(";")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenSemicolon {
-		t.Errorf("expected token of type TT_SEMICOLON but got %q", token)
-	}
-	if token.Text != ";" {
-		t.Errorf("expected token text is ';' but got %q", token)
-	}
+	require.Equalf(t, TokenSemicolon, token.Type, "expected token type %v got %v", TokenSemicolon, token.Type)
+	require.Equalf(t, ";", token.Text, "expected token text is %q got %q", ";", token.Text)
 }
 
 func TestComa(t *testing.T) {
 	tw, err := NewTokenizer(reader(",")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenComa {
-		t.Errorf("expected token of type TT_SEMICOLON but got %q", token)
-	}
-	if token.Text != "," {
-		t.Errorf("expected token text is ',' but got %q", token)
-	}
+	require.Equalf(t, TokenComa, token.Type, "expected token type %v got %v", TokenComa, token.Type)
+	require.Equalf(t, ",", token.Text, "expected token text is %q got %q", ",", token.Text)
 }
 
 func TestPoint(t *testing.T) {
 	tw, err := NewTokenizer(reader(".")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenPoint {
-		t.Errorf("expected token of type TT_SEMICOLON but got %q", token)
-	}
-	if token.Text != "." {
-		t.Errorf("expected token text is '.' but got %q", token)
-	}
+	require.Equalf(t, TokenPoint, token.Type, "expected token type %v got %v", TokenPoint, token.Type)
+	require.Equalf(t, ".", token.Text, "expected token text is %q got %q", ".", token.Text)
 }
 
 func TestAt(t *testing.T) {
 	tw, err := NewTokenizer(reader("@")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenAt {
-		t.Errorf("expected token of type TT_AT but got %q", token)
-	}
-	if token.Text != "@" {
-		t.Errorf("expected token text is '@' but got %q", token)
-	}
+	require.Equalf(t, TokenAt, token.Type, "expected token type %v got %v", TokenAt, token.Type)
+	require.Equalf(t, "@", token.Text, "expected token text is %q got %q", "@", token.Text)
 }
 
 func TestAssignment(t *testing.T) {
 	tw, err := NewTokenizer(reader("=")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenAssignment {
-		t.Errorf("expected token of type TT_ASSIGNMENT but got %q", token)
-	}
-	if token.Text != "=" {
-		t.Errorf("expected token text is '=' but got %q", token)
-	}
+	require.Equalf(t, TokenAssignment, token.Type, "expected token type %v got %v", TokenAssignment, token.Type)
+	require.Equalf(t, "=", token.Text, "expected token text is %q got %q", "=", token.Text)
 }
 
 func TestArrow(t *testing.T) {
 	tw, err := NewTokenizer(reader("=>")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenArrow {
-		t.Errorf("expected token of type TT_ARROW but got %q", token)
-	}
-	if token.Text != "=>" {
-		t.Errorf("expected token text is '=>' but got %q", token)
-	}
+	require.Equalf(t, TokenArrow, token.Type, "expected token type %v got %v", TokenArrow, token.Type)
+	require.Equalf(t, "=>", token.Text, "expected token text is %q got %q", "=>", token.Text)
 }
 
 // Testing variable
 
 func TestVariable(t *testing.T) {
 	tw, err := NewTokenizer(reader("$word")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenVariable {
-		t.Errorf("expected token of type TT_VARIABLE but got %q", token)
-	}
-	if token.Text != "word" {
-		t.Errorf("expected token text is 'word' but got %q", token)
-	}
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "word", token.Text, "expected token text is %q got %q", "word", token.Text)
 }
 
 func TestVariableWithUnderscore(t *testing.T) {
 	tw, err := NewTokenizer(reader("$word_word_word")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenVariable {
-		t.Errorf("expected token of type TT_VARIABLE but got %q", token)
-	}
-	if token.Text != "word_word_word" {
-		t.Errorf("expected token text is 'word_word_word' but got %q", token)
-	}
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "word_word_word", token.Text, "expected token text is %q got %q", "word_word_word", token.Text)
 }
 
 func TestVariableWithNumber(t *testing.T) {
 	tw, err := NewTokenizer(reader("$word00203word")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenVariable {
-		t.Errorf("expected token of type TT_VARIABLE but got %q", token)
-	}
-	if token.Text != "word00203word" {
-		t.Errorf("expected token text is 'word00203word' but got %q", token)
-	}
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "word00203word", token.Text, "expected token text is %q got %q", "word00203word", token.Text)
+}
+
+func TestVariableStartingFromNumber(t *testing.T) {
+	tw, err := NewTokenizer(reader("$203word")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "203word", token.Text, "expected token text is %q got %q", "203word", token.Text)
 }
 
 func TestVariableWithEverything(t *testing.T) {
 	tw, err := NewTokenizer(reader("$word00203word_s")).Tokenize()
-	if err != nil {
-		t.Errorf("tokenization failed with err: %v", err)
-	}
-	if tw.Size() != 3 {
-		t.Errorf("expected 3 tokens in result got %d", tw.Size())
-	}
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
 	token := tw.Get(1)
-	if token.Token != TokenVariable {
-		t.Errorf("expected token of type TT_VARIABLE but got %q", token)
-	}
-	if token.Text != "word00203word_s" {
-		t.Errorf("expected token text is 'word00203word_s' but got %q", token)
-	}
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "word00203word_s", token.Text, "expected token text is %q got %q", "word00203word_s", token.Text)
+}
+
+func TestEOF(t *testing.T) {
+	tw, err := NewTokenizer(reader("some_thing")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 3, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+	token := tw.Get(2)
+	require.Equalf(t, TokenEOF, token.Type, "expected token type %v got %v", TokenEOF, token.Type)
 }

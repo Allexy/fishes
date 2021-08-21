@@ -61,7 +61,7 @@ func (w walker) Match(tokens ...TokenType) bool {
 		if curIndex >= len(w.tokens) {
 			return false
 		}
-		current := w.tokens[curIndex].Token
+		current := w.tokens[curIndex].Type
 		needed := tokens[argIndex]
 		if skipping {
 			opensCounter += getCounterIncerement(needed, current)

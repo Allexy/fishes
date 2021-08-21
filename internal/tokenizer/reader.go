@@ -77,7 +77,7 @@ func (tr *Tokenizer) createFromCurrent() {
 	// Skip comments and white spaces on this stage because these may contain more than 1 character more than 1 line
 	if tr.currentToken != TokenComment && tr.currentToken != TokenWhiteSpace && tr.currentToken != TokenMultilineComment {
 		token := Token{
-			Token:      tr.currentToken,
+			Type:       tr.currentToken,
 			Text:       string(tr.buffer),
 			SourceName: tr.sourceName,
 			Line:       tr.tokenBegunLine,
