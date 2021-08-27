@@ -40,14 +40,28 @@ func TestTokenWalkerMatch(t *testing.T) {
 	require.False(
 		t,
 		tw.Match(TokenWord, TokenWord, TokenOpenParen, TokenDefault, TokenCloseParen, TokenOpenBrace, TokenDefault, TokenCloseBrace),
-		"When steps counter of TokenWalker points to TT_BOF it must not match the pattern",
+		"when steps counter of TokenWalker points to TT_BOF it must not match the pattern",
 	)
 	tw.Move(1)
 	require.True(
 		t,
 		tw.Match(TokenWord, TokenWord, TokenOpenParen, TokenDefault, TokenCloseParen, TokenOpenBrace, TokenDefault, TokenCloseBrace),
-		"When steps counter of TokenWalker points to TT_WORD it must match the pattern",
+		"when steps counter of TokenWalker points to TT_WORD it must match the pattern",
 	)
+}
+
+func TestTokenWalkerOneOf(t *testing.T) {
+	tokens := []Token{
+		{Type: TokenBOF},
+		{Type: TokenWord}, {Type: TokenWord}, {Type: TokenOpenParen}, {Type: TokenCloseParen},
+		{Type: TokenOpenBrace}, {Type: TokenOpenBrace}, {Type: TokenCloseBrace}, {Type: TokenWord},
+		{Type: TokenOpenBrace}, {Type: TokenCloseBrace}, {Type: TokenWord}, {Type: TokenCloseBrace},
+		{Type: TokenEOF},
+	}
+	tw := NewTokenWalker(tokens)
+	tw.Move(3)
+	require.True(t, tw.OneOf(TokenOpenBracket, TokenOpenBrace, TokenOpenParen), "token is in set")
+	require.False(t, tw.OneOf(TokenCloseBracket, TokenCloseBrace, TokenCloseParen), "token is not in set")
 }
 
 // Testing words

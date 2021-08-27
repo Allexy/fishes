@@ -3,9 +3,9 @@ package tokenizer
 type TokenWalker interface {
 	Next() bool
 	Get(offset int) *Token
-	CanMove(step int) bool
 	Move(step int)
 	Match(tokens ...TokenType) bool
+	OneOf(tokens ...TokenType) bool
 	Size() int
 	Clear()
 }
@@ -24,15 +24,10 @@ func (w walker) Next() bool {
 }
 
 func (w walker) Get(offset int) *Token {
-	if w.CanMove(offset) {
+	if w.canMove(offset) {
 		return &w.tokens[w.position+offset]
 	}
 	return nil
-}
-
-func (w walker) CanMove(step int) bool {
-	position := w.position + step
-	return position > -1 && position < len(w.tokens)
 }
 
 func (w *walker) Move(step int) {
@@ -44,7 +39,7 @@ func (w walker) Match(tokens ...TokenType) bool {
 	if patternLength == 0 {
 		return false
 	}
-	if !w.CanMove(patternLength) {
+	if !w.canMove(patternLength) {
 		return false
 	}
 	var (
@@ -64,10 +59,10 @@ func (w walker) Match(tokens ...TokenType) bool {
 		current := w.tokens[curIndex].Type
 		needed := tokens[argIndex]
 		if skipping {
-			opensCounter += getCounterIncerement(needed, current)
+			opensCounter += counterIncrement(needed, current)
 			if current == needed {
 				// opensCounter != -1 <= initial opening did not take into consideration
-				if needCountOpens(needed) && opensCounter != -1 {
+				if countOpens(needed) && opensCounter != -1 {
 					continue
 				}
 				skipping = false
@@ -88,6 +83,23 @@ func (w walker) Match(tokens ...TokenType) bool {
 	}
 }
 
+func (w walker) OneOf(tokens ...TokenType) bool {
+	patternLength := len(tokens)
+	if patternLength == 0 {
+		return false
+	}
+	if !w.Next() {
+		return false
+	}
+	token := w.Get(0).Type
+	for _, expected := range tokens {
+		if expected == token {
+			return true
+		}
+	}
+	return false
+}
+
 func (w walker) Size() int {
 	return len(w.tokens)
 }
@@ -96,7 +108,7 @@ func (w *walker) Clear() {
 	w.tokens = nil
 }
 
-func needCountOpens(needed TokenType) bool {
+func countOpens(needed TokenType) bool {
 	switch needed {
 	case TokenCloseBrace, TokenCloseBracket, TokenCloseParen:
 		return true
@@ -104,7 +116,7 @@ func needCountOpens(needed TokenType) bool {
 	return false
 }
 
-func getCounterIncerement(needed TokenType, tt TokenType) int {
+func counterIncrement(needed TokenType, tt TokenType) int {
 	switch needed {
 	case TokenCloseParen:
 		switch tt {
@@ -132,4 +144,9 @@ func getCounterIncerement(needed TokenType, tt TokenType) int {
 		return 0
 	}
 	return 0
+}
+
+func (w walker) canMove(step int) bool {
+	position := w.position + step
+	return position > -1 && position < len(w.tokens)
 }
