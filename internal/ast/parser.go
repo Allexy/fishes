@@ -40,19 +40,25 @@ func (s *Scope) Parse(walker tokenizer.TokenWalker) error {
 	for walker.Move(1); walker.Next(); walker.Move(1) {
 		// named constant definition @const_name = 123;
 		if walker.Match(tokenizer.TokenAt, tokenizer.TokenWord, tokenizer.TokenAssignment, tokenizer.TokenNumber, tokenizer.TokenSemicolon) {
-			s.parseNamedConstant(walker.Get(1), walker.Get(3))
+			if err := s.parseNamedConstant(walker.Get(1), walker.Get(3)); err != nil {
+				return err
+			}
 			walker.Move(5)
 			continue
 		}
 		// named constant definition @const_name = "abc";
 		if walker.Match(tokenizer.TokenAt, tokenizer.TokenWord, tokenizer.TokenAssignment, tokenizer.TokenString, tokenizer.TokenSemicolon) {
-			s.parseNamedConstant(walker.Get(1), walker.Get(3))
+			if err := s.parseNamedConstant(walker.Get(1), walker.Get(3)); err != nil {
+				return err
+			}
 			walker.Move(5)
 			continue
 		}
 		// named constant definition @const_name = True|False;
 		if walker.Match(tokenizer.TokenAt, tokenizer.TokenWord, tokenizer.TokenAssignment, tokenizer.TokenLogic, tokenizer.TokenSemicolon) {
-			s.parseNamedConstant(walker.Get(1), walker.Get(3))
+			if err := s.parseNamedConstant(walker.Get(1), walker.Get(3)); err != nil {
+				return err
+			}
 			walker.Move(5)
 			continue
 		}
@@ -66,7 +72,7 @@ func (s *Scope) Parse(walker tokenizer.TokenWalker) error {
 
 func (s *Scope) parseNamedConstant(tWord *tokenizer.Token, tVal *tokenizer.Token) error {
 	if _, exists := s.constants[tWord.Text]; exists {
-		return newParserError(tWord.SourceName, fmt.Sprintf("Constant %q already defined", tWord.Text), tWord.Line, tVal.Col, nil)
+		return newParserError(tWord.SourceName, fmt.Sprintf("constant %q already defined", tWord.Text), tWord.Line, tVal.Col, nil)
 	}
 	switch tVal.Type {
 	case tokenizer.TokenNumber:
