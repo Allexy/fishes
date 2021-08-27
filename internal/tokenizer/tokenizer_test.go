@@ -1,6 +1,7 @@
 package tokenizer
 
 import (
+	"github.com/Allexy/fishes/internal/lang"
 	"github.com/stretchr/testify/require"
 	"io"
 	"strings"
@@ -267,7 +268,436 @@ func TestLogicalFalse(t *testing.T) {
 	require.Equalf(t, "false", token.Text, "expected token text is %q got %q", "false", token.Text)
 }
 
-// TODO: Testing operators
+// Testing operators
+
+func TestOpPlus(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a + $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpPlus, token.Text, "expected token text is %q got %q", lang.OpPlus, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpMinus(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a - $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpMinus, token.Text, "expected token text is %q got %q", lang.OpMinus, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpDivision(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a / $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpDivision, token.Text, "expected token text is %q got %q", lang.OpDivision, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpMultiply(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a * $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpMultiply, token.Text, "expected token text is %q got %q", lang.OpMultiply, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpModulo(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a % $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpModulo, token.Text, "expected token text is %q got %q", lang.OpModulo, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpAssign(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a = $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenAssignment, token.Type, "expected token type %v got %v", TokenAssignment, token.Type)
+	require.Equalf(t, lang.OpAssign, token.Text, "expected token text is %q got %q", lang.OpAssign, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpEquals(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a == $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpEquals, token.Text, "expected token text is %q got %q", lang.OpEquals, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpNotEquals(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a != $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpNotEquals, token.Text, "expected token text is %q got %q", lang.OpNotEquals, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpGreaterThan(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a > $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpGreaterThan, token.Text, "expected token text is %q got %q", lang.OpGreaterThan, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpGreaterThanOrEquals(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a >= $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpGreaterThanOrEquals, token.Text, "expected token text is %q got %q", lang.OpGreaterThanOrEquals, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpArrow(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a => $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenArrow, token.Type, "expected token type %v got %v", TokenArrow, token.Type)
+	require.Equalf(t, lang.OpArrow, token.Text, "expected token text is %q got %q", lang.OpArrow, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpLesserThan(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a < $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpLesserThan, token.Text, "expected token text is %q got %q", lang.OpLesserThan, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpLesserThanOrEquals(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a <= $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpLesserThanOrEquals, token.Text, "expected token text is %q got %q", lang.OpLesserThanOrEquals, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpNot(t *testing.T) {
+	tw, err := NewTokenizer(reader("= !$b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenAssignment, token.Type, "expected token type %v got %v", TokenAssignment, token.Type)
+	require.Equalf(t, lang.OpAssign, token.Text, "expected token text is %q got %q", lang.OpAssign, token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpNot, token.Text, "expected token text is %q got %q", lang.OpNot, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpAnd(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a && $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpAnd, token.Text, "expected token text is %q got %q", lang.OpAnd, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpOr(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a || $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpOr, token.Text, "expected token text is %q got %q", lang.OpOr, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpIncrement(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a ++")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 4, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpIncrement, token.Text, "expected token text is %q got %q", lang.OpIncrement, token.Text)
+}
+
+func TestOpDecrement(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a --")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 4, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpDecrement, token.Text, "expected token text is %q got %q", lang.OpDecrement, token.Text)
+}
+
+func TestOpPlusAssign(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a += $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpPlusAssign, token.Text, "expected token text is %q got %q", lang.OpPlusAssign, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpMinusAssign(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a -= $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpMinusAssign, token.Text, "expected token text is %q got %q", lang.OpMinusAssign, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpDivideAssign(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a /= $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpDivideAssign, token.Text, "expected token text is %q got %q", lang.OpDivideAssign, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpMultiplyAssign(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a *= $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpMultiplyAssign, token.Text, "expected token text is %q got %q", lang.OpMultiplyAssign, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
+
+func TestOpModuloAssign(t *testing.T) {
+	tw, err := NewTokenizer(reader("$a %= $b")).Tokenize()
+	require.NoError(t, err, "Must not be tokenization error")
+	require.Equalf(t, 5, tw.Size(), "Walker must contain 3 items got %d", tw.Size())
+
+	var token *Token
+	token = tw.Get(1)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "a", token.Text, "expected token text is %q got %q", "a", token.Text)
+
+	token = tw.Get(2)
+	require.Equalf(t, TokenOperator, token.Type, "expected token type %v got %v", TokenOperator, token.Type)
+	require.Equalf(t, lang.OpModuloAssign, token.Text, "expected token text is %q got %q", lang.OpModuloAssign, token.Text)
+
+	token = tw.Get(3)
+	require.Equalf(t, TokenVariable, token.Type, "expected token type %v got %v", TokenVariable, token.Type)
+	require.Equalf(t, "b", token.Text, "expected token text is %q got %q", "b", token.Text)
+}
 
 // Testing syntax punctuation
 
