@@ -25,8 +25,8 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 			return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid token %v", token), token.Line, token.Col, nil)
 		case TokenNumber:
 			filterNumbersText(token)
-			if isInvalidNumber(token) {
-				return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, nil)
+			if err := isInvalidNumber(token); err != nil {
+				return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, err)
 			}
 		case TokenOperator:
 			if isInvalidOperator(token, previous, next) {
@@ -55,8 +55,8 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 							Line:       token.Line,
 							Col:        token.Col,
 						}
-						if isInvalidNumber(&replacement) {
-							return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, nil)
+						if err := isInvalidNumber(&replacement); err != nil {
+							return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, err)
 						}
 						optimized = append(optimized, replacement)
 						tw.Move(2) // Step over operator and up comming number
@@ -126,7 +126,10 @@ func isInvalidOperator(c *Token, p *Token, n *Token) bool {
 	return true
 }
 
-func isInvalidNumber(c *Token) bool {
-	_, ok := strconv.ParseFloat(c.Text, 64)
-	return ok != nil
+func isInvalidNumber(c *Token) error {
+	v, err := strconv.ParseFloat(c.Text, 64)
+	if err == nil {
+		c.ParsedNumber = v
+	}
+	return err
 }

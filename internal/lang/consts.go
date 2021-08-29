@@ -1,9 +1,19 @@
 package lang
 
-// Key words
+// Keywords
 const (
-	KwTrue  = "true"
-	KwFalse = "false"
+	KwTrue   = "true"
+	KwFalse  = "false"
+	KwNull   = "null"
+	KwTry    = "try"
+	KwCatch  = "catch"
+	KwThrow  = "throw"
+	KwIf     = "if"
+	KwFor    = "for"
+	KwWhile  = "while"
+	KwSwitch = "switch"
+	KwCase   = "case"
+	KwReturn = "return"
 )
 
 // Operators

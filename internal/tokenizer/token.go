@@ -91,10 +91,11 @@ func (tt TokenType) String() string {
 }
 
 type Token struct {
-	Type       TokenType
-	Text       string
-	SourceName string
-	Line, Col  uint32
+	Type         TokenType
+	Text         string
+	SourceName   string
+	Line, Col    uint32
+	ParsedNumber float64
 }
 
 func (t Token) String() string {
