@@ -7,11 +7,23 @@ type TokenType uint8
 // Possible token types
 const (
 	TokenBOF              TokenType = iota
-	TokenDefault                    // ...
+	TokenAny                        // ...
 	TokenWord                       // abc
+	TokenConst                      // const keyword
+	TokenNull                       // null keyword
+	TokenIf                         // if keyword
+	TokenLogicTrue                  // true keyword
+	TokenLogicFalse                 // false keyword
+	TokenTry                        // try keyword
+	TokenCatch                      // catch keyword
+	TokenThrow                      // throw keyword
+	TokenFor                        // for keyword
+	TokenWhile                      // while keyword
+	TokenSwitch                     // switch keyword
+	TokenCase                       // case keyword
+	TokenReturn                     // return keyword
 	TokenNumber                     // 123.0
 	TokenString                     // "..."
-	TokenLogic                      // true / false
 	TokenOperator                   // +-*/...
 	TokenOpenParen                  // (
 	TokenCloseParen                 // )
@@ -33,68 +45,95 @@ const (
 	TokenEOF
 )
 
+func (tt TokenType) String() string {
+	switch tt {
+	case TokenBOF:
+		return "T_BOF"
+	case TokenAny:
+		return "T_ANY"
+	case TokenWord:
+		return "T_WORD"
+	case TokenConst:
+		return "T_CONST"
+	case TokenNull:
+		return "T_NULL"
+	case TokenIf:
+		return "T_IF"
+	case TokenLogicTrue:
+		return "T_TRUE"
+	case TokenLogicFalse:
+		return "T_FALSE"
+	case TokenTry:
+		return "T_TRY"
+	case TokenCatch:
+		return "T_CATCH"
+	case TokenThrow:
+		return "T_THROW"
+	case TokenFor:
+		return "T_FOR"
+	case TokenWhile:
+		return "T_WHILE"
+	case TokenSwitch:
+		return "T_SWITCH"
+	case TokenCase:
+		return "T_CASE"
+	case TokenReturn:
+		return "T_RETURN"
+	case TokenString:
+		return "T_STRING"
+	case TokenNumber:
+		return "T_NUMBER"
+	case TokenOperator:
+		return "T_OPERATOR"
+	case TokenOpenParen:
+		return "T_OPENING_PAREN"
+	case TokenCloseParen:
+		return "T_CLOSING_PAREN"
+	case TokenOpenBracket:
+		return "T_OPENING_BRACKET"
+	case TokenCloseBracket:
+		return "T_CLOSING_BRACKET"
+	case TokenOpenBrace:
+		return "T_OPENING_BRACE"
+	case TokenCloseBrace:
+		return "T_CLOSING_BRACE"
+	case TokenColon:
+		return "T_COLON"
+	case TokenSemicolon:
+		return "T_SEMICOLON"
+	case TokenComa:
+		return "T_COMA"
+	case TokenAt:
+		return "T_AT"
+	case TokenPoint:
+		return "T_POINT"
+	case TokenAssignment:
+		return "T_ASSIGNMENT"
+	case TokenArrow:
+		return "T_ARROW"
+	case TokenVariable:
+		return "T_VARIABLE"
+	case TokenComment:
+		return "T_COMMENT"
+	case TokenMultilineComment:
+		return "T_MULTILINE_COMMENT"
+	case TokenWhiteSpace:
+		return "T_WHITE_SPACE"
+	case TokenEOF:
+		return "T_EOF"
+	default:
+		panic("unknown token type")
+	}
+}
+
 type Token struct {
-	Token      TokenType
-	Text       string
-	SourceName string
-	Line, Col  uint32
+	Type         TokenType
+	Text         string
+	SourceName   string
+	Line, Col    uint32
+	ParsedNumber float64
 }
 
 func (t Token) String() string {
-	var name string
-	switch t.Token {
-	case TokenBOF:
-		name = "BOF"
-	case TokenDefault:
-		name = "DEFAULT"
-	case TokenWord:
-		name = "WORD"
-	case TokenString:
-		name = "STRING"
-	case TokenNumber:
-		name = "NUMBER"
-	case TokenLogic:
-		name = "LOGIC"
-	case TokenOperator:
-		name = "OPERATOR"
-	case TokenOpenParen:
-		name = "O_PAREN"
-	case TokenCloseParen:
-		name = "C_PAREN"
-	case TokenOpenBracket:
-		name = "O_BRACKET"
-	case TokenCloseBracket:
-		name = "C_BRACKET"
-	case TokenOpenBrace:
-		name = "O_BRACE"
-	case TokenCloseBrace:
-		name = "C_BRACE"
-	case TokenColon:
-		name = "COLON"
-	case TokenSemicolon:
-		name = "SEMICOLON"
-	case TokenComa:
-		name = "COMA"
-	case TokenAt:
-		name = "AT"
-	case TokenPoint:
-		name = "POINT"
-	case TokenAssignment:
-		name = "ASSIGNMENT"
-	case TokenArrow:
-		name = "ARROW"
-	case TokenVariable:
-		name = "VARIABLE"
-	case TokenComment:
-		name = "COMMENT"
-	case TokenMultilineComment:
-		name = "MULTILINE_COMMET"
-	case TokenWhiteSpace:
-		name = "WHITE_SPACE"
-	case TokenEOF:
-		name = "EOF"
-	default:
-		name = "UNKNOWN"
-	}
-	return fmt.Sprintf("%s(%q@%d:%d)", name, t.Text, t.Line, t.Col)
+	return fmt.Sprintf("%s(%q@%d:%d)", t.Type, t.Text, t.Line, t.Col)
 }

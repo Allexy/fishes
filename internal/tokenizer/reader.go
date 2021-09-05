@@ -31,7 +31,7 @@ func NewTokenizer(reader io.Reader, sourceName string) *Tokenizer {
 		sourceName:     sourceName,
 		reader:         reader,
 		repeatCounter:  0,
-		currentToken:   TokenDefault,
+		currentToken:   TokenAny,
 		currentLine:    0,
 		currentCol:     0,
 		tokenBegunLine: 0,
@@ -43,6 +43,7 @@ func NewTokenizer(reader io.Reader, sourceName string) *Tokenizer {
 	return tr
 }
 
+//Tokenize parses source text into tokens slice and returns it wrapped by TokenWalker
 func (tr *Tokenizer) Tokenize() (TokenWalker, error) {
 	// does all stuff
 	bufReader := bufio.NewReader(tr.reader)
@@ -54,7 +55,7 @@ func (tr *Tokenizer) Tokenize() (TokenWalker, error) {
 				tr.createEOF()
 				break
 			}
-			return nil, NewTokenizerError(tr.sourceName, "Failed to read source: "+err.Error(), tr.currentLine, tr.currentCol, err)
+			return nil, NewTokenizerError(tr.sourceName, "failed to read source: "+err.Error(), tr.currentLine, tr.currentCol, err)
 		}
 		tr.countLinesAndCols(r)
 		tr.doRepeat()
@@ -71,13 +72,12 @@ func (tr *Tokenizer) Tokenize() (TokenWalker, error) {
 	return walker, nil
 }
 
-// Appends token from current state
-//  and resets state
+//createFromCurrent appends token from current state and resets state
 func (tr *Tokenizer) createFromCurrent() {
-	// Skip comments and white spaces on this stage because these may contain more than 1 character more than 1 line
+	// Skip comments and white spaces on this stage because these may contain more than 1 character & more than 1 line
 	if tr.currentToken != TokenComment && tr.currentToken != TokenWhiteSpace && tr.currentToken != TokenMultilineComment {
 		token := Token{
-			Token:      tr.currentToken,
+			Type:       tr.currentToken,
 			Text:       string(tr.buffer),
 			SourceName: tr.sourceName,
 			Line:       tr.tokenBegunLine,
@@ -88,7 +88,7 @@ func (tr *Tokenizer) createFromCurrent() {
 	tr.buffer = tr.buffer[:0]
 	tr.tokenBegunLine = 0
 	tr.tokenBegunCol = 0
-	tr.currentToken = TokenDefault
+	tr.currentToken = TokenAny
 }
 
 func (tr *Tokenizer) createFromTypeAndRune(tt TokenType, r rune) {
@@ -97,31 +97,31 @@ func (tr *Tokenizer) createFromTypeAndRune(tt TokenType, r rune) {
 	tr.createFromCurrent()
 }
 
-// Appends runt to builder
+//appendToBuffer appends rune to builder
 func (tr *Tokenizer) appendToBuffer(r rune) {
 	tr.buffer = append(tr.buffer, r)
 }
 
-// Creates and appends token with type BOF
+//createBOF creates and appends token with type BOF
 func (tr *Tokenizer) createBOF() {
 	tr.beginToken(TokenBOF)
 	tr.createFromCurrent()
 	tr.currentLine = 1
 }
 
-// Creates and appends token with type EOF
+//createEOF creates and appends token with type EOF
 func (tr *Tokenizer) createEOF() {
-	if tr.currentToken != TokenDefault {
+	if tr.currentToken != TokenAny {
 		tr.createFromCurrent()
 	}
 	tr.beginToken(TokenEOF)
 	tr.createFromCurrent()
 }
 
-// Processes single rune
+//process single rune
 func (tr *Tokenizer) process(r rune) error {
 	switch tr.currentToken {
-	case TokenDefault:
+	case TokenAny:
 		return tr.handleDefaultState(r)
 	case TokenString:
 		if tr.escapedString {
@@ -156,10 +156,12 @@ func (tr *Tokenizer) process(r rune) error {
 		} else if r == '.' {
 			for _, c := range tr.buffer {
 				if c == '.' {
-					return NewTokenizerError(tr.sourceName, "Unexpected symbol \".\"", tr.currentLine, tr.currentCol, nil)
+					return NewTokenizerError(tr.sourceName, "unexpected symbol \".\"", tr.currentLine, tr.currentCol, nil)
 				}
 			}
 			tr.appendToBuffer(r)
+		} else if unicode.IsLetter(r) || r == '_' {
+			return NewTokenizerError(tr.sourceName, fmt.Sprintf("unexpected symbol %q", r), tr.currentLine, tr.currentCol, nil)
 		} else {
 			tr.createFromCurrent()
 			tr.doRepeat()
@@ -208,7 +210,7 @@ func (tr *Tokenizer) process(r rune) error {
 				tr.createFromCurrent()
 				tr.doRepeat()
 			} else {
-				return NewTokenizerError(tr.sourceName, "Empty identifier", tr.currentLine, tr.currentCol, nil)
+				return NewTokenizerError(tr.sourceName, "empty identifier", tr.currentLine, tr.currentCol, nil)
 			}
 		}
 	case TokenComment:
@@ -234,7 +236,7 @@ func (tr *Tokenizer) process(r rune) error {
 	return nil
 }
 
-// Starts new token or creates one form single rune
+//handleDefaultState starts new token or creates one form single rune
 func (tr *Tokenizer) handleDefaultState(r rune) error {
 
 	if unicode.IsSpace(r) {
@@ -293,19 +295,19 @@ func (tr *Tokenizer) handleDefaultState(r rune) error {
 		tr.beginToken(TokenOperator)
 		tr.appendToBuffer(r)
 	default:
-		return NewTokenizerError(tr.sourceName, fmt.Sprintf("Unknown sumbol %q", r), tr.currentLine, tr.currentCol, nil)
+		return NewTokenizerError(tr.sourceName, fmt.Sprintf("unknown sumbol %q", r), tr.currentLine, tr.currentCol, nil)
 	}
 	return nil
 }
 
-// Initializes state
+//beginToken initializes state
 func (tr *Tokenizer) beginToken(tt TokenType) {
 	tr.tokenBegunLine = tr.currentLine
 	tr.tokenBegunCol = tr.currentCol
 	tr.currentToken = tt
 }
 
-// Increments line number if current rune is \n otherwise increments col number
+//countLinesAndCols increments line number if current rune is \n otherwise increments col number
 func (tr *Tokenizer) countLinesAndCols(r rune) {
 	if r == '\n' {
 		tr.currentCol = 0
@@ -315,7 +317,7 @@ func (tr *Tokenizer) countLinesAndCols(r rune) {
 	}
 }
 
-// Returns true if current state requires to repeat iteration of rune processing
+//repeat returns true if current state requires to repeat iteration of rune processing
 func (tr *Tokenizer) repeat() bool {
 	if tr.repeatCounter > 0 {
 		tr.repeatCounter -= 1
@@ -324,7 +326,7 @@ func (tr *Tokenizer) repeat() bool {
 	return false
 }
 
-// Sets current state to request to repeat iteration of single rune processing
+//doRepeat sets current state to request to repeat iteration of single rune processing
 func (tr *Tokenizer) doRepeat() {
 	tr.repeatCounter += 1
 }
