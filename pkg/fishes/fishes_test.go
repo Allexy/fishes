@@ -54,41 +54,41 @@ func TestValueBoolean(t *testing.T) {
 }
 
 func TestParseConstNumber(t *testing.T) {
-	w, err := walker("@CONST=1234;")
+	w, err := walker("const CONST_NAME=1234;")
 	require.NoError(t, err, "must not be tokenization error")
 	scope := newScope()
 	require.NoError(t, scope.parse(w), "must not be parsing errors")
-	require.Containsf(t, scope.constants, "CONST", "must contains constant %q", "CONST")
-	val := scope.constants["CONST"].AsNumber()
+	require.Containsf(t, scope.constants, "CONST_NAME", "must contains constant %q", "CONST_NAME")
+	val := scope.constants["CONST_NAME"].AsNumber()
 	require.Equalf(t, 1234.0, val, "expected value is 1234.0 but got %.1f", val)
 }
 
 func TestParseConstString(t *testing.T) {
-	w, err := walker("@CONST=\"abc\";")
+	w, err := walker("const CONST_NAME=\"abc\";")
 	require.NoError(t, err, "must not be tokenization error")
 	scope := newScope()
 	require.NoError(t, scope.parse(w), "must not be parsing errors")
-	require.Containsf(t, scope.constants, "CONST", "must contains constant %q", "CONST")
-	val := scope.constants["CONST"].AsString()
+	require.Containsf(t, scope.constants, "CONST_NAME", "must contains constant %q", "CONST_NAME")
+	val := scope.constants["CONST_NAME"].AsString()
 	require.Equalf(t, "abc", val, "expected value is %q but got %q", "abc", val)
 }
 
 func TestParseConstTrue(t *testing.T) {
-	w, err := walker("@CONST=true;")
+	w, err := walker("const CONST_NAME=true;")
 	require.NoError(t, err, "must not be tokenization error")
 	scope := newScope()
 	require.NoError(t, scope.parse(w), "must not be parsing errors")
-	require.Containsf(t, scope.constants, "CONST", "must contains constant %q", "CONST")
-	val := scope.constants["CONST"].AsBoolean()
+	require.Containsf(t, scope.constants, "CONST_NAME", "must contains constant %q", "CONST_NAME")
+	val := scope.constants["CONST_NAME"].AsBoolean()
 	require.Equalf(t, true, val, "expected value is %q but got %q", true, val)
 }
 
 func TestParseConstFalse(t *testing.T) {
-	w, err := walker("@CONST=false;")
+	w, err := walker("const CONST_NAME=false;")
 	require.NoError(t, err, "must not be tokenization error")
 	scope := newScope()
 	require.NoError(t, scope.parse(w), "must not be parsing errors")
-	require.Containsf(t, scope.constants, "CONST", "must contains constant %q", "CONST")
-	val := scope.constants["CONST"].AsBoolean()
+	require.Containsf(t, scope.constants, "CONST_NAME", "must contains constant %q", "CONST_NAME")
+	val := scope.constants["CONST_NAME"].AsBoolean()
 	require.Equalf(t, false, val, "expected value is %q but got %q", false, val)
 }
