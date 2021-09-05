@@ -71,7 +71,7 @@ func (w walker) Match(tokens ...TokenType) bool {
 			continue
 		}
 		argIndex += 1
-		if needed == TokenDefault {
+		if needed == TokenAny {
 			skipping = true
 			curIndex -= 1 // retry current token
 			opensCounter = 0

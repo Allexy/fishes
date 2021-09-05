@@ -2,6 +2,7 @@ package lang
 
 // Keywords
 const (
+	KwConst  = "const"
 	KwTrue   = "true"
 	KwFalse  = "false"
 	KwNull   = "null"

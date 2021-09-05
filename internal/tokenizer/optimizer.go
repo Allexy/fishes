@@ -21,7 +21,7 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 		previous := tw.Get(-1)
 		next := tw.Get(1)
 		switch token.Type {
-		case TokenDefault:
+		case TokenAny:
 			return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid token %v", token), token.Line, token.Col, nil)
 		case TokenNumber:
 			filterNumbersText(token)
@@ -59,7 +59,7 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 							return nil, NewTokenizerError(token.SourceName, fmt.Sprintf("invalid numerical literal %q", token.Text), token.Line, token.Col, err)
 						}
 						optimized = append(optimized, replacement)
-						tw.Move(2) // Step over operator and up comming number
+						tw.Move(2) // Step over operator and upcoming number
 						continue
 					}
 				}
@@ -67,8 +67,32 @@ func optimizeAndValidate(tw TokenWalker) (TokenWalker, error) {
 			}
 		case TokenWord:
 			switch token.Text {
-			case lang.KwTrue, lang.KwFalse:
-				token.Type = TokenLogic
+			case lang.KwConst:
+				token.Type = TokenConst
+			case lang.KwTrue:
+				token.Type = TokenLogicTrue
+			case lang.KwFalse:
+				token.Type = TokenLogicFalse
+			case lang.KwNull:
+				token.Type = TokenNull
+			case lang.KwTry:
+				token.Type = TokenTry
+			case lang.KwCatch:
+				token.Type = TokenCatch
+			case lang.KwThrow:
+				token.Type = TokenThrow
+			case lang.KwIf:
+				token.Type = TokenIf
+			case lang.KwFor:
+				token.Type = TokenFor
+			case lang.KwWhile:
+				token.Type = TokenWhile
+			case lang.KwSwitch:
+				token.Type = TokenSwitch
+			case lang.KwCase:
+				token.Type = TokenCase
+			case lang.KwReturn:
+				token.Type = TokenReturn
 			}
 		}
 		optimized = append(optimized, *token)
@@ -118,7 +142,7 @@ func isInvalidOperator(c *Token, p *Token, n *Token) bool {
 			return false
 		}
 	case lang.OpIncrement, lang.OpDecrement:
-		// This kinds stands before or after variable
+		// These kinds stand before or after variable
 		if (p == nil || p.Type != TokenVariable) && (n == nil || n.Type != TokenVariable) {
 			return false
 		}

@@ -7,11 +7,23 @@ type TokenType uint8
 // Possible token types
 const (
 	TokenBOF              TokenType = iota
-	TokenDefault                    // ...
+	TokenAny                        // ...
 	TokenWord                       // abc
+	TokenConst                      // const keyword
+	TokenNull                       // null keyword
+	TokenIf                         // if keyword
+	TokenLogicTrue                  // true keyword
+	TokenLogicFalse                 // false keyword
+	TokenTry                        // try keyword
+	TokenCatch                      // catch keyword
+	TokenThrow                      // throw keyword
+	TokenFor                        // for keyword
+	TokenWhile                      // while keyword
+	TokenSwitch                     // switch keyword
+	TokenCase                       // case keyword
+	TokenReturn                     // return keyword
 	TokenNumber                     // 123.0
 	TokenString                     // "..."
-	TokenLogic                      // true / false
 	TokenOperator                   // +-*/...
 	TokenOpenParen                  // (
 	TokenCloseParen                 // )
@@ -36,55 +48,79 @@ const (
 func (tt TokenType) String() string {
 	switch tt {
 	case TokenBOF:
-		return "BOF"
-	case TokenDefault:
-		return "DEFAULT"
+		return "T_BOF"
+	case TokenAny:
+		return "T_ANY"
 	case TokenWord:
-		return "WORD"
+		return "T_WORD"
+	case TokenConst:
+		return "T_CONST"
+	case TokenNull:
+		return "T_NULL"
+	case TokenIf:
+		return "T_IF"
+	case TokenLogicTrue:
+		return "T_TRUE"
+	case TokenLogicFalse:
+		return "T_FALSE"
+	case TokenTry:
+		return "T_TRY"
+	case TokenCatch:
+		return "T_CATCH"
+	case TokenThrow:
+		return "T_THROW"
+	case TokenFor:
+		return "T_FOR"
+	case TokenWhile:
+		return "T_WHILE"
+	case TokenSwitch:
+		return "T_SWITCH"
+	case TokenCase:
+		return "T_CASE"
+	case TokenReturn:
+		return "T_RETURN"
 	case TokenString:
-		return "STRING"
+		return "T_STRING"
 	case TokenNumber:
-		return "NUMBER"
-	case TokenLogic:
-		return "LOGIC"
+		return "T_NUMBER"
 	case TokenOperator:
-		return "OPERATOR"
+		return "T_OPERATOR"
 	case TokenOpenParen:
-		return "O_PAREN"
+		return "T_OPENING_PAREN"
 	case TokenCloseParen:
-		return "C_PAREN"
+		return "T_CLOSING_PAREN"
 	case TokenOpenBracket:
-		return "O_BRACKET"
+		return "T_OPENING_BRACKET"
 	case TokenCloseBracket:
-		return "C_BRACKET"
+		return "T_CLOSING_BRACKET"
 	case TokenOpenBrace:
-		return "O_BRACE"
+		return "T_OPENING_BRACE"
 	case TokenCloseBrace:
-		return "C_BRACE"
+		return "T_CLOSING_BRACE"
 	case TokenColon:
-		return "COLON"
+		return "T_COLON"
 	case TokenSemicolon:
-		return "SEMICOLON"
+		return "T_SEMICOLON"
 	case TokenComa:
-		return "COMA"
+		return "T_COMA"
 	case TokenAt:
-		return "AT"
+		return "T_AT"
 	case TokenPoint:
-		return "POINT"
+		return "T_POINT"
 	case TokenAssignment:
-		return "ASSIGNMENT"
+		return "T_ASSIGNMENT"
 	case TokenArrow:
-		return "ARROW"
+		return "T_ARROW"
 	case TokenVariable:
-		return "VARIABLE"
+		return "T_VARIABLE"
 	case TokenComment:
-		return "COMMENT"
+		return "T_COMMENT"
 	case TokenMultilineComment:
-		return "MULTILINE_COMMET"
+		return "T_MULTILINE_COMMENT"
 	case TokenWhiteSpace:
-		return "WHITE_SPACE"
+		return "T_WHITE_SPACE"
 	case TokenEOF:
-		return "EOF"
+		return "T_EOF"
 	default:
 		panic("unknown token type")
 	}

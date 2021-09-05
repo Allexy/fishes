@@ -69,7 +69,7 @@ func (s *scope) parseBlock(walker tokenizer.TokenWalker) error {
 			}
 			s.expressions.merge(nested.expressions)
 		// statement if(...){... or switch(...){... or while(...){... or for(...){...
-		case walker.Match(tokenizer.TokenWord, tokenizer.TokenOpenParen, tokenizer.TokenDefault, tokenizer.TokenCloseParen, tokenizer.TokenOpenBrace):
+		case walker.Match(tokenizer.TokenWord, tokenizer.TokenOpenParen, tokenizer.TokenAny, tokenizer.TokenCloseParen, tokenizer.TokenOpenBrace):
 			if err := s.parseStatement(walker); err != nil {
 				return err
 			}
@@ -87,7 +87,7 @@ func (s *scope) parseBlock(walker tokenizer.TokenWalker) error {
 				return err
 			}
 		// statement throw(...);
-		case walker.Match(tokenizer.TokenWord, tokenizer.TokenOpenParen, tokenizer.TokenDefault, tokenizer.TokenCloseParen) && walker.Get(0).Text == lang.KwThrow:
+		case walker.Match(tokenizer.TokenWord, tokenizer.TokenOpenParen, tokenizer.TokenAny, tokenizer.TokenCloseParen) && walker.Get(0).Text == lang.KwThrow:
 			if err := s.parseThrow(walker); err != nil {
 				return err
 			}
@@ -191,7 +191,7 @@ func (s *scope) parseStatementSwitch(walker tokenizer.TokenWalker) error {
 	walker.Move(1)
 	for !walker.OneOf(tokenizer.TokenEOF, tokenizer.TokenCloseBrace) {
 		// case(...){...
-		if walker.Match(tokenizer.TokenWord, tokenizer.TokenOpenParen, tokenizer.TokenDefault, tokenizer.TokenCloseParen, tokenizer.TokenOpenBrace) && walker.Get(0).Text == lang.KwCase {
+		if walker.Match(tokenizer.TokenWord, tokenizer.TokenOpenParen, tokenizer.TokenAny, tokenizer.TokenCloseParen, tokenizer.TokenOpenBrace) && walker.Get(0).Text == lang.KwCase {
 			// step over "case("
 			walker.Move(2)
 			cc, err := s.parseExpression(walker)
